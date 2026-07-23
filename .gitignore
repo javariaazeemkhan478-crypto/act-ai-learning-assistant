@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+backend/env/
+env/
+venv/
+
+# Environment & API keys
+.env
+backend/.env
+*.env
+
+# SQLite & local DBs
+db.sqlite3
+*.sqlite3
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# IDE & OS files
+.DS_Store
+.idea/
+.vscode/
+.gemini/
+
+# Build outputs
+build/
+dist/
+staticfiles/
