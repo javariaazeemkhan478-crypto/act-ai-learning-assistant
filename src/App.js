@@ -43,18 +43,29 @@ const safeRemoveStorage = (key) => {
 };
 
 function App() {
-  const [token, setToken] = useState(() => safeGetStorage('pathai_token', ''));
-  const [currentUser, setCurrentUser] = useState(() => {
-    const raw = safeGetStorage('pathai_user', 'null');
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return null;
-    }
-  });
+  const [mounted, setMounted] = useState(false);
+  const [token, setToken] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [theme, setTheme] = useState(() => safeGetStorage('pathai_theme', 'dark'));
-  const [heatmapPalette, setHeatmapPalette] = useState(() => safeGetStorage('pathai_palette', 'emerald'));
+  const [theme, setTheme] = useState('dark');
+  const [heatmapPalette, setHeatmapPalette] = useState('emerald');
+
+  useEffect(() => {
+    setMounted(true);
+    const savedToken = safeGetStorage('pathai_token', '');
+    const savedUserStr = safeGetStorage('pathai_user', 'null');
+    const savedTheme = safeGetStorage('pathai_theme', 'dark');
+    const savedPalette = safeGetStorage('pathai_palette', 'emerald');
+
+    setToken(savedToken);
+    setTheme(savedTheme);
+    setHeatmapPalette(savedPalette);
+    try {
+      setCurrentUser(JSON.parse(savedUserStr));
+    } catch (e) {
+      setCurrentUser(null);
+    }
+  }, []);
   
   // Auth Form State
   const [authMode, setAuthMode] = useState('login');
@@ -67,10 +78,11 @@ function App() {
 
   // Roadmap State
   const [roadmap, setRoadmap] = useState(null);
-  const [roadmapGoal, setRoadmapGoal] = useState('Machine Learning Core');
-  const [roadmapLevel, setRoadmapLevel] = useState('beginner');
-  const [roadmapHours, setRoadmapHours] = useState(10);
-  const [roadmapLoading, setRoadmapLoading] = useState(false);
+  const [goal, setGoal] = useState('Natural Language Processing (NLP)');
+  const [level, setLevel] = useState('beginner');
+  const [hours, setHours] = useState(10);
+  const [generatingRoadmap, setGeneratingRoadmap] = useState(false);
+  const [roadmapError, setRoadmapError] = useState('');
 
   // Chat State
   const [chatSessions, setChatSessions] = useState([]);
@@ -78,13 +90,15 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [chatImage, setChatImage] = useState('');
+  const [attachedImage, setAttachedImage] = useState(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
 
-  // File Input Refs for 3 distinct options
+  // File Input Refs for options
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const resumePdfInputRef = useRef(null);
 
   // Flashcards & MCQ State
   const [flashcardData, setFlashcardData] = useState(null);
@@ -481,6 +495,30 @@ function App() {
     } finally {
       setResumeLoading(false);
     }
+  };
+
+  // PDF Upload Handler for ATS Resume Scorer
+  const handleResumePdfUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      setResumeText(text);
+    };
+    reader.readAsText(file);
+  };
+
+  // Export ATS Evaluation Results as PDF
+  const handleExportATSResultPDF = () => {
+    const input = document.getElementById('ats-pdf-content');
+    if (!input) return;
+    html2canvas(input, { scale: 2 }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      pdf.addImage(imgData, 'PNG', 0, 0, 210, (canvas.height * 210) / canvas.width);
+      pdf.save(`PathAI_ATS_Resume_Evaluation.pdf`);
+    });
   };
 
   // If Not Authenticated, Render Auth Screen
@@ -1304,18 +1342,36 @@ function App() {
         {/* ATS RESUME SCORER TAB */}
         {activeTab === 'ats' && (
           <div>
+            <input 
+              type="file" 
+              ref={resumePdfInputRef} 
+              accept=".pdf,.txt,.doc,.docx" 
+              onChange={handleResumePdfUpload} 
+              style={{ display: 'none' }} 
+            />
+
             <div className="page-header">
-              <h1 className="page-title"><FileText style={{ color: 'var(--accent-emerald)' }} /> ATS Resume Scorer & Analyzer</h1>
-              <p className="page-desc">Paste your resume text to evaluate ATS score out of 100, keyword gaps, and formatting suggestions.</p>
+              <h1 className="page-title"><FileText style={{ color: 'var(--accent-emerald)' }} /> ATS Resume Scorer & AI Analyzer</h1>
+              <p className="page-desc">Upload or paste your resume to evaluate ATS compatibility score out of 100, keyword gaps, and actionable suggestions.</p>
             </div>
 
             <div className="form-card">
               <form onSubmit={handleScoreResume}>
                 <div className="form-group">
-                  <label className="form-label">Resume Text</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <label className="form-label" style={{ marginBottom: 0 }}>Resume Content</label>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                      onClick={() => resumePdfInputRef.current?.click()}
+                    >
+                      <Upload size={14} /> Upload Resume File (PDF/TXT)
+                    </button>
+                  </div>
                   <textarea 
                     className="form-textarea"
-                    placeholder="Paste the full text of your resume here..."
+                    placeholder="Paste your resume text here, or click 'Upload Resume File' above..."
                     value={resumeText}
                     onChange={e => setResumeText(e.target.value)}
                     required
@@ -1349,19 +1405,28 @@ function App() {
 
             {/* ATS Score Results */}
             {resumeResult && !resumeLoading && (
-              <div>
-                <div className="score-gauge-card" style={{ '--score-pct': resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75 }}>
-                  <div className="score-circle">
-                    {resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75}
+              <div id="ats-pdf-content">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div className="score-gauge-card" style={{ flex: 1, margin: 0, '--score-pct': resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75 }}>
+                    <div className="score-circle">
+                      {resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75}%
+                    </div>
+                    <div>
+                      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        ATS Score: {resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75}/100
+                        <span className="week-badge" style={{ background: (resumeResult.ats_score >= 75 ? 'rgba(16, 185, 129, 0.2)' : resumeResult.ats_score >= 50 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(244, 63, 94, 0.2)'), color: (resumeResult.ats_score >= 75 ? 'var(--accent-emerald)' : resumeResult.ats_score >= 50 ? 'var(--accent-amber)' : '#fda4af') }}>
+                          {resumeResult.ats_score >= 75 ? '✅ Highly Eligible' : resumeResult.ats_score >= 50 ? '⚡ Moderately Eligible' : '⚠️ Low Compatibility'}
+                        </span>
+                      </h2>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                        {resumeResult.feedback_json?.summary || "Calculated based on industry ATS scanner benchmarks and keyword density analysis."}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.4rem' }}>
-                      ATS Compatibility Score: {resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75}/100
-                    </h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                      {resumeResult.feedback_json?.summary || "Calculated based on industry ATS scanner benchmarks."}
-                    </p>
-                  </div>
+
+                  <button type="button" className="btn btn-secondary" onClick={handleExportATSResultPDF}>
+                    <Download size={16} /> Save Results PDF
+                  </button>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
