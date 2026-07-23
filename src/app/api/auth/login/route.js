@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
-import { verifyPassword, signAccessToken, signRefreshToken } from '../../../../lib/auth';
+import { prisma } from '@/lib/prisma';
+import { verifyPassword, signAccessToken, signRefreshToken } from '@/lib/auth';
 
 export async function POST(req) {
   try {
@@ -24,7 +24,6 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
     }
 
-    // Update streak & last active date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

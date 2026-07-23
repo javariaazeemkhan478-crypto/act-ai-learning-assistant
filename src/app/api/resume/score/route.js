@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
-import { getUserIdFromAuthHeader } from '../../../lib/auth';
-import { callOpenRouter } from '../../../lib/openrouter';
+import { prisma } from '@/lib/prisma';
+import { getUserIdFromAuthHeader } from '@/lib/auth';
+import { callOpenRouter } from '@/lib/openrouter';
 
 const ATS_PROMPT = (
   "You are an expert ATS (Applicant Tracking System) resume evaluator and senior tech recruiter. " +
