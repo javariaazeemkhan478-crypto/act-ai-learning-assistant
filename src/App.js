@@ -9,7 +9,7 @@ import {
   Sparkles, Send, Trash2, LogOut, ArrowRight, BookOpen, 
   Zap, Clock, AlertCircle, RefreshCw, Sun, Moon,
   Mic, Download, FileText, Check, Flame, Palette, Paperclip, Camera,
-  Plus, Layers, HelpCircle, FileDown, Eye, Image
+  Plus, Layers, HelpCircle, FileDown, Eye, Image, Upload, EyeOff
 } from 'lucide-react';
 import './App.css';
 
@@ -60,6 +60,10 @@ function App() {
     setToken(savedToken);
     setTheme(savedTheme);
     setHeatmapPalette(savedPalette);
+    const savedUsername = safeGetStorage('pathai_username', '');
+    if (savedUsername) {
+      setAuthData(prev => ({ ...prev, username: savedUsername }));
+    }
     try {
       setCurrentUser(JSON.parse(savedUserStr));
     } catch (e) {
@@ -72,6 +76,7 @@ function App() {
   const [authData, setAuthData] = useState({ username: '', password: '', email: '', first_name: '' });
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Dashboard State
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -117,6 +122,9 @@ function App() {
   const [jobDescription, setJobDescription] = useState('');
   const [resumeResult, setResumeResult] = useState(null);
   const [resumeLoading, setResumeLoading] = useState(false);
+  const [resumeError, setResumeError] = useState('');
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState('');
 
   // Theme Sync
   useEffect(() => {
@@ -249,16 +257,37 @@ function App() {
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
+
+    const trimmedUsername = authData.username.trim().toLowerCase();
+    if (trimmedUsername.length < 3) {
+      setAuthError('Username must be at least 3 characters.');
+      return;
+    }
+    if (authData.password.length < 6) {
+      setAuthError('Password must be at least 6 characters.');
+      return;
+    }
+    if (authMode === 'register' && authData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authData.email)) {
+      setAuthError('Please enter a valid email address.');
+      return;
+    }
+
     setAuthLoading(true);
     const endpoint = authMode === 'login' ? '/auth/login/' : '/auth/register/';
     try {
-      const res = await axios.post(`${API_BASE}${endpoint}`, authData);
+      const payload = {
+        ...authData,
+        username: trimmedUsername,
+        email: authData.email?.trim().toLowerCase() || '',
+      };
+      const res = await axios.post(`${API_BASE}${endpoint}`, payload);
       const { access, user } = res.data;
       setToken(access);
       setCurrentUser(user);
       safeSetStorage('pathai_token', access);
       safeSetStorage('pathai_user', JSON.stringify(user));
-      setAuthData({ username: '', password: '', email: '', first_name: '' });
+      safeSetStorage('pathai_username', trimmedUsername);
+      setAuthData({ username: trimmedUsername, password: '', email: '', first_name: '' });
       setActiveTab('dashboard');
     } catch (err) {
       setAuthError(err.response?.data?.error || err.response?.data?.detail || 'Authentication failed. Please check inputs.');
@@ -481,8 +510,10 @@ function App() {
   // ATS Resume Scoring Submit
   const handleScoreResume = async (e) => {
     e.preventDefault();
-    if (!resumeText.trim() || resumeLoading) return;
+    if (!resumeText.trim() || !jobDescription.trim() || resumeLoading) return;
     setResumeLoading(true);
+    setResumeError('');
+    setResumeResult(null);
     try {
       const res = await axios.post(`${API_BASE}/resume/score/`, {
         resume_text: resumeText,
@@ -491,22 +522,42 @@ function App() {
       setResumeResult(res.data);
       fetchDashboardStats();
     } catch (err) {
-      alert('Error scoring resume.');
+      setResumeError(err.response?.data?.error || 'Error scoring resume. Please try again.');
     } finally {
       setResumeLoading(false);
     }
   };
 
   // PDF Upload Handler for ATS Resume Scorer
-  const handleResumePdfUpload = (e) => {
+  const handleResumePdfUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target.result;
-      setResumeText(text);
-    };
-    reader.readAsText(file);
+    setResumeError('');
+    setUploadedFileName(file.name);
+
+    if (file.name.toLowerCase().endsWith('.txt')) {
+      const reader = new FileReader();
+      reader.onload = (event) => setResumeText(event.target.result);
+      reader.readAsText(file);
+      return;
+    }
+
+    setPdfUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await axios.post(`${API_BASE}/resume/parse-pdf/`, formData, {
+        ...getAuthHeaders(),
+        headers: { ...getAuthHeaders().headers, 'Content-Type': 'multipart/form-data' },
+      });
+      setResumeText(res.data.text);
+    } catch (err) {
+      setResumeError(err.response?.data?.error || 'Failed to extract text from PDF.');
+      setUploadedFileName('');
+    } finally {
+      setPdfUploading(false);
+      if (resumePdfInputRef.current) resumePdfInputRef.current.value = '';
+    }
   };
 
   // Export ATS Evaluation Results as PDF
@@ -520,6 +571,25 @@ function App() {
       pdf.save(`PathAI_ATS_Resume_Evaluation.pdf`);
     });
   };
+
+  // Show sleek loader while restoring session on mount (prevents login screen flicker!)
+  if (!mounted) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0a0d14', color: '#fff' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div style={{ background: 'linear-gradient(135deg, #6366f1, #10b981)', padding: '0.6rem', borderRadius: '12px', display: 'flex' }}>
+            <Sparkles size={24} color="#fff" />
+          </div>
+          <span style={{ fontSize: '1.8rem', fontWeight: 800, background: 'linear-gradient(135deg, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            PathAI
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.95rem' }}>
+          <RefreshCw className="spin" size={18} color="#10b981" /> Restoring learning session...
+        </div>
+      </div>
+    );
+  }
 
   // If Not Authenticated, Render Auth Screen
   if (!token) {
@@ -595,14 +665,29 @@ function App() {
 
             <div className="form-group">
               <label className="form-label">Password</label>
-              <input 
-                type="password" 
-                className="form-input" 
-                placeholder="••••••••" 
-                value={authData.password}
-                onChange={e => setAuthData({...authData, password: e.target.value})}
-                required 
-              />
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-input" 
+                  placeholder="••••••••" 
+                  value={authData.password}
+                  onChange={e => setAuthData({...authData, password: e.target.value})}
+                  required 
+                  minLength={6}
+                  style={{ paddingRight: '2.75rem' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {authMode === 'register' && (
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>Minimum 6 characters</p>
+              )}
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={authLoading}>
@@ -1345,33 +1430,45 @@ function App() {
             <input 
               type="file" 
               ref={resumePdfInputRef} 
-              accept=".pdf,.txt,.doc,.docx" 
+              accept=".pdf,.txt" 
               onChange={handleResumePdfUpload} 
               style={{ display: 'none' }} 
             />
 
             <div className="page-header">
-              <h1 className="page-title"><FileText style={{ color: 'var(--accent-emerald)' }} /> ATS Resume Scorer & AI Analyzer</h1>
-              <p className="page-desc">Upload or paste your resume to evaluate ATS compatibility score out of 100, keyword gaps, and actionable suggestions.</p>
+              <h1 className="page-title"><FileText style={{ color: 'var(--accent-emerald)' }} /> AI/ML ATS Resume Scorer</h1>
+              <p className="page-desc">Upload your resume PDF and paste the job description. Our TF-IDF engine scores eligibility % using cosine similarity, keyword coverage, and AI/ML skill matching.</p>
             </div>
+
+            {resumeError && (
+              <div style={{ background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fda4af', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <AlertCircle size={16} /> {resumeError}
+              </div>
+            )}
 
             <div className="form-card">
               <form onSubmit={handleScoreResume}>
                 <div className="form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <label className="form-label" style={{ marginBottom: 0 }}>Resume Content</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <label className="form-label" style={{ marginBottom: 0 }}>Resume (PDF or TXT)</label>
                     <button 
                       type="button" 
                       className="btn btn-secondary" 
                       style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
                       onClick={() => resumePdfInputRef.current?.click()}
+                      disabled={pdfUploading}
                     >
-                      <Upload size={14} /> Upload Resume File (PDF/TXT)
+                      {pdfUploading ? <><RefreshCw className="spin" size={14} /> Extracting PDF...</> : <><Upload size={14} /> Upload Resume PDF</>}
                     </button>
                   </div>
+                  {uploadedFileName && (
+                    <p style={{ fontSize: '0.8rem', color: 'var(--accent-emerald)', marginBottom: '0.5rem' }}>
+                      ✓ Loaded: {uploadedFileName}
+                    </p>
+                  )}
                   <textarea 
                     className="form-textarea"
-                    placeholder="Paste your resume text here, or click 'Upload Resume File' above..."
+                    placeholder="Paste resume text here, or upload a PDF above..."
                     value={resumeText}
                     onChange={e => setResumeText(e.target.value)}
                     required
@@ -1379,18 +1476,19 @@ function App() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Target Job Description (Optional)</label>
+                  <label className="form-label">Target Job Description (Required for TF-IDF Matching)</label>
                   <textarea 
                     className="form-textarea"
-                    style={{ minHeight: '100px' }}
-                    placeholder="Paste job posting text (e.g. AI Engineer at OpenAI / PyTorch Developer)..."
+                    style={{ minHeight: '120px' }}
+                    placeholder="Paste the full job posting — required skills, responsibilities, and qualifications..."
                     value={jobDescription}
                     onChange={e => setJobDescription(e.target.value)}
+                    required
                   />
                 </div>
 
-                <button type="submit" className="btn btn-primary" disabled={resumeLoading || !resumeText.trim()}>
-                  {resumeLoading ? <><RefreshCw className="spin" size={16} /> Evaluating ATS Compatibility...</> : <><Sparkles size={16} /> Score My Resume</>}
+                <button type="submit" className="btn btn-primary" disabled={resumeLoading || pdfUploading || !resumeText.trim() || !jobDescription.trim()}>
+                  {resumeLoading ? <><RefreshCw className="spin" size={16} /> Running TF-IDF Analysis...</> : <><Sparkles size={16} /> Score Eligibility with AI/ML ATS</>}
                 </button>
               </form>
             </div>
@@ -1407,19 +1505,19 @@ function App() {
             {resumeResult && !resumeLoading && (
               <div id="ats-pdf-content">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <div className="score-gauge-card" style={{ flex: 1, margin: 0, '--score-pct': resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75 }}>
+                  <div className="score-gauge-card" style={{ flex: 1, margin: 0, '--score-pct': resumeResult.ats_score || 0 }}>
                     <div className="score-circle">
-                      {resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75}%
+                      {resumeResult.ats_score || 0}%
                     </div>
                     <div>
-                      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        ATS Score: {resumeResult.ats_score || resumeResult.feedback_json?.overall_score || 75}/100
+                      <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        Eligibility: {resumeResult.ats_score || 0}/100
                         <span className="week-badge" style={{ background: (resumeResult.ats_score >= 75 ? 'rgba(16, 185, 129, 0.2)' : resumeResult.ats_score >= 50 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(244, 63, 94, 0.2)'), color: (resumeResult.ats_score >= 75 ? 'var(--accent-emerald)' : resumeResult.ats_score >= 50 ? 'var(--accent-amber)' : '#fda4af') }}>
-                          {resumeResult.ats_score >= 75 ? '✅ Highly Eligible' : resumeResult.ats_score >= 50 ? '⚡ Moderately Eligible' : '⚠️ Low Compatibility'}
+                          {resumeResult.feedback_json?.eligibility_emoji || ''} {resumeResult.feedback_json?.eligibility || (resumeResult.ats_score >= 75 ? 'Highly Eligible' : resumeResult.ats_score >= 50 ? 'Moderately Eligible' : 'Low Compatibility')}
                         </span>
                       </h2>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                        {resumeResult.feedback_json?.summary || "Calculated based on industry ATS scanner benchmarks and keyword density analysis."}
+                        {resumeResult.feedback_json?.summary || 'Scored using TF-IDF cosine similarity and keyword coverage.'}
                       </p>
                     </div>
                   </div>
@@ -1428,6 +1526,37 @@ function App() {
                     <Download size={16} /> Save Results PDF
                   </button>
                 </div>
+
+                {resumeResult.feedback_json?.ml_breakdown && (
+                  <div className="form-card" style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Zap size={18} color="var(--accent-indigo)" /> ML Algorithm Breakdown
+                    </h3>
+                    <div className="grid-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
+                      <div className="stat-card">
+                        <div className="stat-value">{resumeResult.feedback_json.ml_breakdown.tfidf_cosine_similarity}%</div>
+                        <div className="stat-label">TF-IDF Similarity</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-value">{resumeResult.feedback_json.ml_breakdown.keyword_coverage_pct}%</div>
+                        <div className="stat-label">Keyword Coverage</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-value">{resumeResult.feedback_json.ml_breakdown.aiml_skills_found}</div>
+                        <div className="stat-label">AI/ML Skills Found</div>
+                      </div>
+                      <div className="stat-card">
+                        <div className="stat-value">{resumeResult.feedback_json.ml_breakdown.section_completeness_pct}%</div>
+                        <div className="stat-label">Section Completeness</div>
+                      </div>
+                    </div>
+                    {resumeResult.feedback_json.scoring_method && (
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+                        Method: {resumeResult.feedback_json.scoring_method}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
                   {/* Missing Keywords */}

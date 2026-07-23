@@ -5,13 +5,18 @@ import { verifyPassword, signAccessToken, signRefreshToken } from '@/lib/auth';
 export async function POST(req) {
   try {
     const { username, password } = await req.json();
+    const trimmedUsername = (username || '').trim().toLowerCase();
 
-    if (!username || !password) {
+    if (!trimmedUsername || !password) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({
-      where: { username },
+      where: { username: trimmedUsername },
       include: { profile: true }
     });
 
