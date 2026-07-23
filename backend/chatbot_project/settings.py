@@ -12,7 +12,13 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-pathai-secret-key-c
 
 DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    '*',
+    '.pythonanywhere.com',
+    '.vercel.app',
+    'localhost',
+    '127.0.0.1'
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -55,12 +61,16 @@ TEMPLATES = [{
 
 WSGI_APPLICATION = 'chatbot_project.wsgi.application'
 
-# Database Configuration (Render DATABASE_URL or local PostgreSQL / SQLite fallback)
+# Database Configuration (Supabase PostgreSQL via DATABASE_URL with local fallback)
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600, ssl_require=False)
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True if 'supabase' in DATABASE_URL or 'render' in DATABASE_URL else False
+        )
     }
 else:
     USE_POSTGRES = os.getenv('USE_POSTGRES', 'true').lower() == 'true'
@@ -114,8 +124,14 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
+# CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+# Custom CORS domains if environment variable provided
+CORS_ORIGINS_ENV = os.getenv('CORS_ALLOWED_ORIGINS')
+if CORS_ORIGINS_ENV:
+    CORS_ALLOWED_ORIGINS = [url.strip() for url in CORS_ORIGINS_ENV.split(',') if url.strip()]
 
 OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '')
 
