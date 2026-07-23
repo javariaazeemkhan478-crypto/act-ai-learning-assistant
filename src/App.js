@@ -161,7 +161,7 @@ function App() {
   // Fetch Dashboard Stats
   const fetchDashboardStats = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE}/dashboard/`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE}/dashboard`, getAuthHeaders());
       setDashboardStats(res.data);
       if (res.data.user) setCurrentUser(res.data.user);
     } catch (err) {
@@ -172,7 +172,7 @@ function App() {
   // Fetch Roadmap
   const fetchRoadmap = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE}/roadmap/`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE}/roadmap`, getAuthHeaders());
       setRoadmap(res.data);
     } catch (err) {
       setRoadmap(null);
@@ -182,7 +182,7 @@ function App() {
   // Fetch Chat Sessions
   const fetchChatSessions = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE}/chat/sessions/`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE}/chat/sessions`, getAuthHeaders());
       setChatSessions(res.data);
       if (res.data.length > 0 && !currentSessionId) {
         setCurrentSessionId(res.data[0].id);
@@ -197,7 +197,7 @@ function App() {
   const fetchResumeHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/resume/history/`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE}/resume/history`, getAuthHeaders());
       setResumeHistory(res.data);
     } catch (err) {
       console.error(err);
@@ -209,7 +209,7 @@ function App() {
 
   const loadHistoryScan = async (scanId) => {
     try {
-      const res = await axios.get(`${API_BASE}/resume/history/${scanId}/`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE}/resume/history/${scanId}`, getAuthHeaders());
       setResumeResult(res.data);
       setResumeText(res.data.resume_text || '');
       setJobDescription(res.data.job_description || '');
@@ -225,7 +225,7 @@ function App() {
     e.stopPropagation();
     if (!window.confirm('Delete this resume scan from your history?')) return;
     try {
-      await axios.delete(`${API_BASE}/resume/history/${scanId}/`, getAuthHeaders());
+      await axios.delete(`${API_BASE}/resume/history/${scanId}`, getAuthHeaders());
       setResumeHistory(prev => prev.filter(s => s.id !== scanId));
       if (resumeResult?.id === scanId) setResumeResult(null);
       fetchDashboardStats();
@@ -250,7 +250,7 @@ function App() {
   // Create New Chat Thread
   const handleCreateNewSession = async () => {
     try {
-      const res = await axios.post(`${API_BASE}/chat/sessions/`, { title: 'New Conversation' }, getAuthHeaders());
+      const res = await axios.post(`${API_BASE}/chat/sessions`, { title: 'New Conversation' }, getAuthHeaders());
       setChatSessions(prev => [res.data, ...prev]);
       setCurrentSessionId(res.data.id);
       setMessages([]);
@@ -265,7 +265,7 @@ function App() {
   const handleDeleteSession = async (sessionId, e) => {
     e.stopPropagation();
     try {
-      await axios.delete(`${API_BASE}/chat/sessions/${sessionId}/`, getAuthHeaders());
+      await axios.delete(`${API_BASE}/chat/sessions/${sessionId}`, getAuthHeaders());
       const updated = chatSessions.filter(s => s.id !== sessionId);
       setChatSessions(updated);
       if (currentSessionId === sessionId) {
@@ -285,7 +285,7 @@ function App() {
   // Verify Current User on Launch
   useEffect(() => {
     if (token) {
-      axios.get(`${API_BASE}/auth/me/`, getAuthHeaders())
+      axios.get(`${API_BASE}/auth/me`, getAuthHeaders())
         .then(res => {
           setCurrentUser(res.data);
           safeSetStorage('pathai_user', JSON.stringify(res.data));
@@ -323,7 +323,7 @@ function App() {
     }
 
     setAuthLoading(true);
-    const endpoint = authMode === 'login' ? '/auth/login/' : '/auth/register/';
+    const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
     try {
       const payload = {
         ...authData,
@@ -340,7 +340,7 @@ function App() {
       setAuthData({ username: trimmedUsername, password: '', email: '', first_name: '' });
       setActiveTab('dashboard');
     } catch (err) {
-      setAuthError(err.response?.data?.error || err.response?.data?.detail || 'Authentication failed. Please check inputs.');
+      setAuthError(err.response?.data?.error || err.response?.data?.detail || err.message || 'Authentication failed. Please check inputs.');
     } finally {
       setAuthLoading(false);
     }
@@ -428,7 +428,7 @@ function App() {
     setChatLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/chat/`, {
+      const res = await axios.post(`${API_BASE}/chat`, {
         message: userMsg,
         image_url: imgData,
         session_id: currentSessionId
@@ -455,7 +455,7 @@ function App() {
   const handleGenerateFlashcards = async () => {
     setChatLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/chat/flashcards/`, { topic: roadmap?.goal || 'AI/ML Fundamentals' }, getAuthHeaders());
+      const res = await axios.post(`${API_BASE}/chat/flashcards`, { topic: roadmap?.goal || 'AI/ML Fundamentals' }, getAuthHeaders());
       setFlashcardData(res.data);
       setMcqData(null);
     } catch (err) {
@@ -468,7 +468,7 @@ function App() {
   const handleGenerateMCQs = async () => {
     setChatLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/chat/mcqs/`, { topic: roadmap?.goal || 'AI/ML Fundamentals' }, getAuthHeaders());
+      const res = await axios.post(`${API_BASE}/chat/mcqs`, { topic: roadmap?.goal || 'AI/ML Fundamentals' }, getAuthHeaders());
       setMcqData(res.data);
       setFlashcardData(null);
       setSelectedAnswers({});
@@ -500,7 +500,7 @@ function App() {
     setGeneratingRoadmap(true);
     setRoadmapError('');
     try {
-      const res = await axios.post(`${API_BASE}/roadmap/generate/`, {
+      const res = await axios.post(`${API_BASE}/roadmap/generate`, {
         goal, level, hours_per_week: hours
       }, getAuthHeaders());
       setRoadmap(res.data);
@@ -515,7 +515,7 @@ function App() {
   // Toggle Roadmap Item Completion
   const handleToggleItem = async (itemId) => {
     try {
-      const res = await axios.patch(`${API_BASE}/roadmap/items/${itemId}/toggle/`, {}, getAuthHeaders());
+      const res = await axios.patch(`${API_BASE}/roadmap/items/${itemId}/toggle`, {}, getAuthHeaders());
       if (roadmap) {
         const updatedItems = roadmap.items.map(item => item.id === itemId ? res.data : item);
         setRoadmap({ ...roadmap, items: updatedItems });
@@ -544,7 +544,7 @@ function App() {
     if (!codeInput.trim() || debugLoading) return;
     setDebugLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/debug/`, {
+      const res = await axios.post(`${API_BASE}/debug`, {
         code: codeInput,
         framework
       }, getAuthHeaders());
@@ -565,7 +565,7 @@ function App() {
     setResumeError('');
     setResumeResult(null);
     try {
-      const res = await axios.post(`${API_BASE}/resume/score/`, {
+      const res = await axios.post(`${API_BASE}/resume/score`, {
         resume_text: resumeText,
         job_description: jobDescription
       }, getAuthHeaders());
@@ -597,7 +597,7 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await axios.post(`${API_BASE}/resume/parse-pdf/`, formData, {
+      const res = await axios.post(`${API_BASE}/resume/parse-pdf`, formData, {
         ...getAuthHeaders(),
         headers: { ...getAuthHeaders().headers, 'Content-Type': 'multipart/form-data' },
       });

@@ -191,16 +191,51 @@ Open **[http://localhost:3000](http://localhost:3000)** → Create an account �
 | `POST` | `/api/resume/parse-pdf` | Extract text from PDF resume |
 | `GET` | `/api/resume/history` | List user's resume scan history |
 | `GET/DELETE` | `/api/resume/history/[id]` | View or delete a past scan |
+| `GET` | `/api/health` | Server & database connectivity check |
 | `GET` | `/api/dashboard` | Activity stats & 60-day heatmap |
 
 ---
 
 ## Deploy to Vercel
 
-1. Import repository into [Vercel](https://vercel.com/dashboard)
-2. Set root directory to `./`
-3. Add environment variables: `DATABASE_URL`, `OPENROUTER_API_KEY`, `JWT_SECRET`
-4. Deploy — frontend and API routes deploy together as one project
+### Step 1 — Create a Supabase Database (required for login)
+
+Vercel **cannot** use `localhost` PostgreSQL. You need a cloud database:
+
+1. Create a free project at [supabase.com](https://supabase.com)
+2. Go to **Project Settings → Database → Connection Pooling**
+3. Copy the **URI** (Transaction mode, port **6543**)
+4. It should look like:
+   ```
+   postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true
+   ```
+
+### Step 2 — Push database schema to Supabase
+
+On your local machine, run once with your Supabase direct URL:
+
+```bash
+DATABASE_URL="postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres" npx prisma db push
+```
+
+### Step 3 — Add Vercel Environment Variables
+
+In [Vercel Dashboard](https://vercel.com/dashboard) → Your Project → **Settings → Environment Variables**, add:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Supabase **pooler** URL (port 6543, with `?pgbouncer=true`) |
+| `JWT_SECRET` | Any long random secret string |
+| `OPENROUTER_API_KEY` | Your OpenRouter API key |
+
+### Step 4 — Deploy & Verify
+
+1. Redeploy after adding env vars (**Deployments → Redeploy**)
+2. Check health: `https://your-app.vercel.app/api/health`
+   - `database: "connected"` = login will work
+   - `database: "failed"` = fix `DATABASE_URL`
+
+> **Live demo:** [act-ai-learning-assistant-rais.vercel.app](https://act-ai-learning-assistant-rais.vercel.app/)
 
 ---
 

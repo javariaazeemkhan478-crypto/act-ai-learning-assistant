@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, isDatabaseError } from '@/lib/prisma';
 import { verifyPassword, signAccessToken, signRefreshToken } from '@/lib/auth';
 
 export async function POST(req) {
@@ -72,7 +72,13 @@ export async function POST(req) {
     });
 
   } catch (err) {
-    console.error("Login Error:", err);
+    console.error('Login Error:', err);
+    if (isDatabaseError(err)) {
+      return NextResponse.json(
+        { error: 'Database connection failed. Ensure DATABASE_URL is set on Vercel (use Supabase pooler URL).' },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: 'Failed to authenticate user' }, { status: 500 });
   }
 }
