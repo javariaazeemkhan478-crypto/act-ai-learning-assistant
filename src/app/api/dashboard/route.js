@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
-import { getUserIdFromAuthHeader } from '../../../lib/auth';
+import { prisma } from '@/lib/prisma';
+import { getUserIdFromAuthHeader } from '@/lib/auth';
 
 export async function GET(req) {
   try {
@@ -52,7 +52,6 @@ export async function GET(req) {
       where: { userId }
     });
 
-    // 60-Day Activity Grid Heatmap Calculation
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

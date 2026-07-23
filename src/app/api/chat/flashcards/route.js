@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getUserIdFromAuthHeader } from '../../../../lib/auth';
-import { callOpenRouter } from '../../../../lib/openrouter';
+import { getUserIdFromAuthHeader } from '@/lib/auth';
+import { callOpenRouter } from '@/lib/openrouter';
 
 export async function POST(req) {
   try {

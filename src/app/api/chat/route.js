@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
-import { getUserIdFromAuthHeader } from '../../../lib/auth';
-import { callOpenRouter } from '../../../lib/openrouter';
+import { prisma } from '@/lib/prisma';
+import { getUserIdFromAuthHeader } from '@/lib/auth';
+import { callOpenRouter } from '@/lib/openrouter';
 
 const DOUBT_SOLVER_PROMPT = (
   "You are PathAI, an expert AI/ML tutor. Explain concepts in simple, accessible terms with clear intuitive examples. " +
@@ -38,7 +38,6 @@ export async function POST(req) {
       });
     }
 
-    // Save user message
     await prisma.chatMessage.create({
       data: {
         userId,
@@ -49,7 +48,6 @@ export async function POST(req) {
       }
     });
 
-    // Fetch history for context
     const history = await prisma.chatMessage.findMany({
       where: { sessionId: session.id },
       orderBy: { timestamp: 'desc' },
@@ -78,7 +76,6 @@ export async function POST(req) {
       aiReply = "I am currently experiencing a network timeout with the OpenRouter model. Please try again in a moment!";
     }
 
-    // Save assistant message
     await prisma.chatMessage.create({
       data: {
         userId,

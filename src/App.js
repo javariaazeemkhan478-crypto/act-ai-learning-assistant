@@ -15,12 +15,46 @@ import './App.css';
 
 const API_BASE = process.env.REACT_APP_API_URL || '/api';
 
+const safeGetStorage = (key, fallback = '') => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      return localStorage.getItem(key) || fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  return fallback;
+};
+
+const safeSetStorage = (key, val) => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(key, val);
+    } catch (e) {}
+  }
+};
+
+const safeRemoveStorage = (key) => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {}
+  }
+};
+
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('pathai_token') || '');
-  const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem('pathai_user') || 'null'));
+  const [token, setToken] = useState(() => safeGetStorage('pathai_token', ''));
+  const [currentUser, setCurrentUser] = useState(() => {
+    const raw = safeGetStorage('pathai_user', 'null');
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  });
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [theme, setTheme] = useState(localStorage.getItem('pathai_theme') || 'dark');
-  const [heatmapPalette, setHeatmapPalette] = useState(localStorage.getItem('pathai_palette') || 'emerald');
+  const [theme, setTheme] = useState(() => safeGetStorage('pathai_theme', 'dark'));
+  const [heatmapPalette, setHeatmapPalette] = useState(() => safeGetStorage('pathai_palette', 'emerald'));
   
   // Auth Form State
   const [authMode, setAuthMode] = useState('login');
@@ -33,20 +67,19 @@ function App() {
 
   // Roadmap State
   const [roadmap, setRoadmap] = useState(null);
-  const [goal, setGoal] = useState('Natural Language Processing (NLP)');
-  const [level, setLevel] = useState('beginner');
-  const [hours, setHours] = useState(10);
-  const [generatingRoadmap, setGeneratingRoadmap] = useState(false);
-  const [roadmapError, setRoadmapError] = useState('');
+  const [roadmapGoal, setRoadmapGoal] = useState('Machine Learning Core');
+  const [roadmapLevel, setRoadmapLevel] = useState('beginner');
+  const [roadmapHours, setRoadmapHours] = useState(10);
+  const [roadmapLoading, setRoadmapLoading] = useState(false);
 
-  // Advanced Chat State
+  // Chat State
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
+  const [chatImage, setChatImage] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [attachedImage, setAttachedImage] = useState(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
 
   // File Input Refs for 3 distinct options
@@ -73,13 +106,15 @@ function App() {
 
   // Theme Sync
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('pathai_theme', theme);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    safeSetStorage('pathai_theme', theme);
   }, [theme]);
 
   // Palette Sync
   useEffect(() => {
-    localStorage.setItem('pathai_palette', heatmapPalette);
+    safeSetStorage('pathai_palette', heatmapPalette);
   }, [heatmapPalette]);
 
   const toggleTheme = () => {
@@ -94,8 +129,8 @@ function App() {
   const handleLogout = useCallback(() => {
     setToken('');
     setCurrentUser(null);
-    localStorage.removeItem('pathai_token');
-    localStorage.removeItem('pathai_user');
+    safeRemoveStorage('pathai_token');
+    safeRemoveStorage('pathai_user');
   }, []);
 
   // Fetch Dashboard Stats
@@ -182,7 +217,7 @@ function App() {
       axios.get(`${API_BASE}/auth/me/`, getAuthHeaders())
         .then(res => {
           setCurrentUser(res.data);
-          localStorage.setItem('pathai_user', JSON.stringify(res.data));
+          safeSetStorage('pathai_user', JSON.stringify(res.data));
         })
         .catch(() => handleLogout());
     }
@@ -207,8 +242,8 @@ function App() {
       const { access, user } = res.data;
       setToken(access);
       setCurrentUser(user);
-      localStorage.setItem('pathai_token', access);
-      localStorage.setItem('pathai_user', JSON.stringify(user));
+      safeSetStorage('pathai_token', access);
+      safeSetStorage('pathai_user', JSON.stringify(user));
       setAuthData({ username: '', password: '', email: '', first_name: '' });
       setActiveTab('dashboard');
     } catch (err) {
