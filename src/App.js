@@ -9,7 +9,7 @@ import {
   Sparkles, Send, Trash2, LogOut, ArrowRight, BookOpen, 
   Zap, Clock, AlertCircle, RefreshCw, Sun, Moon,
   Mic, Download, FileText, Check, Flame, Palette, Paperclip, Camera,
-  Plus, Layers, HelpCircle, FileDown, Eye, Image, Upload, EyeOff
+  Plus, Layers, HelpCircle, FileDown, Eye, Image, Upload, EyeOff, History
 } from 'lucide-react';
 import './App.css';
 
@@ -125,6 +125,9 @@ function App() {
   const [resumeError, setResumeError] = useState('');
   const [pdfUploading, setPdfUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
+  const [resumeHistory, setResumeHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   // Theme Sync
   useEffect(() => {
@@ -190,6 +193,52 @@ function App() {
     }
   }, [getAuthHeaders, currentSessionId]);
 
+  // Fetch Resume Scan History
+  const fetchResumeHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const res = await axios.get(`${API_BASE}/resume/history/`, getAuthHeaders());
+      setResumeHistory(res.data);
+    } catch (err) {
+      console.error(err);
+      setResumeHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [getAuthHeaders]);
+
+  const loadHistoryScan = async (scanId) => {
+    try {
+      const res = await axios.get(`${API_BASE}/resume/history/${scanId}/`, getAuthHeaders());
+      setResumeResult(res.data);
+      setResumeText(res.data.resume_text || '');
+      setJobDescription(res.data.job_description || '');
+      setResumeError('');
+      setShowHistory(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      setResumeError(err.response?.data?.error || 'Failed to load scan from history.');
+    }
+  };
+
+  const deleteHistoryScan = async (scanId, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this resume scan from your history?')) return;
+    try {
+      await axios.delete(`${API_BASE}/resume/history/${scanId}/`, getAuthHeaders());
+      setResumeHistory(prev => prev.filter(s => s.id !== scanId));
+      if (resumeResult?.id === scanId) setResumeResult(null);
+      fetchDashboardStats();
+    } catch (err) {
+      setResumeError(err.response?.data?.error || 'Failed to delete scan.');
+    }
+  };
+
+  const formatHistoryDate = (dateStr) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  };
+
   // Select Chat Session Thread
   const handleSelectSession = (session) => {
     setCurrentSessionId(session.id);
@@ -251,7 +300,8 @@ function App() {
     if (activeTab === 'dashboard') fetchDashboardStats();
     if (activeTab === 'roadmap') fetchRoadmap();
     if (activeTab === 'chat') fetchChatSessions();
-  }, [activeTab, token, fetchDashboardStats, fetchRoadmap, fetchChatSessions]);
+    if (activeTab === 'ats') fetchResumeHistory();
+  }, [activeTab, token, fetchDashboardStats, fetchRoadmap, fetchChatSessions, fetchResumeHistory]);
 
   // Handle Auth Submit
   const handleAuthSubmit = async (e) => {
@@ -521,6 +571,7 @@ function App() {
       }, getAuthHeaders());
       setResumeResult(res.data);
       fetchDashboardStats();
+      fetchResumeHistory();
     } catch (err) {
       setResumeError(err.response?.data?.error || 'Error scoring resume. Please try again.');
     } finally {
@@ -600,8 +651,12 @@ function App() {
             <div className="brand-icon"><Sparkles size={22} /></div>
             <span className="brand-title" style={{ fontSize: '1.75rem' }}>PathAI</span>
           </div>
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.9rem' }}>
             AI-Powered Learning Companion for AI/ML Students
+          </p>
+          <p style={{ textAlign: 'center', color: 'var(--text-dim)', marginBottom: '1.5rem', fontSize: '0.8rem', lineHeight: 1.5, padding: '0 0.5rem' }}>
+            Final Project — ACT AI Course · Government of Pakistan<br />
+            <span style={{ color: 'var(--accent-emerald)' }}>Sign in to save your roadmap, chat history, and resume scans permanently.</span>
           </p>
 
           <div className="auth-tabs">
@@ -768,39 +823,41 @@ function App() {
           </div>
         </nav>
 
-        <div className="user-profile-section">
-          <div className="user-info">
-            <div className="avatar">
-              {currentUser?.username ? currentUser.username[0].toUpperCase() : 'U'}
-            </div>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{currentUser?.username}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>AI/ML Student</div>
-            </div>
+        <div className="sidebar-footer">
+          <div className="act-badge">
+            <span className="act-badge-dot" />
+            ACT AI · Govt. of Pakistan
           </div>
-          <button 
-            onClick={handleLogout} 
-            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.3rem' }}
-            title="Sign Out"
-          >
-            <LogOut size={18} />
-          </button>
+          <p className="sidebar-footer-text">PathAI Final Project</p>
         </div>
       </aside>
 
       {/* Main Content Body */}
       <main className="main-content">
-        {/* Top Header Controls (Streak & Theme Toggle) */}
-        <div className="top-controls">
-          <div className="streak-badge">
-            <Flame size={18} fill="var(--accent-amber)" />
-            <span>{userStreak} Day Streak</span>
+        {/* Global Top Header — Streak, Theme, User & Sign Out */}
+        <header className="app-header">
+          <div className="app-header-left">
+            <span className="header-greeting">Welcome, <strong>{currentUser?.first_name || currentUser?.username}</strong></span>
           </div>
-
-          <button className="theme-toggle-btn" onClick={toggleTheme}>
-            {theme === 'dark' ? <><Sun size={16} /> Light Mode</> : <><Moon size={16} /> Dark Mode</>}
-          </button>
-        </div>
+          <div className="app-header-right">
+            <div className="streak-badge">
+              <Flame size={18} fill="var(--accent-amber)" />
+              <span>{userStreak} Day Streak</span>
+            </div>
+            <button className="theme-toggle-btn" onClick={toggleTheme} type="button">
+              {theme === 'dark' ? <><Sun size={16} /> Light</> : <><Moon size={16} /> Dark</>}
+            </button>
+            <div className="header-user-chip">
+              <div className="avatar avatar-sm">
+                {currentUser?.username ? currentUser.username[0].toUpperCase() : 'U'}
+              </div>
+              <span>{currentUser?.username}</span>
+            </div>
+            <button className="logout-btn" onClick={handleLogout} type="button" title="Sign Out">
+              <LogOut size={16} /> Sign Out
+            </button>
+          </div>
+        </header>
 
         {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
@@ -1436,9 +1493,67 @@ function App() {
             />
 
             <div className="page-header">
-              <h1 className="page-title"><FileText style={{ color: 'var(--accent-emerald)' }} /> AI/ML ATS Resume Scorer</h1>
-              <p className="page-desc">Upload your resume PDF and paste the job description. Our TF-IDF engine scores eligibility % using cosine similarity, keyword coverage, and AI/ML skill matching.</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h1 className="page-title"><FileText style={{ color: 'var(--accent-emerald)' }} /> AI/ML ATS Resume Scorer</h1>
+                  <p className="page-desc">Upload your resume PDF and paste the job description. TF-IDF cosine similarity, keyword coverage, and AI/ML skill matching power your eligibility score.</p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => { setShowHistory(!showHistory); if (!showHistory) fetchResumeHistory(); }}
+                >
+                  <History size={16} /> {showHistory ? 'Hide History' : `Scan History (${resumeHistory.length})`}
+                </button>
+              </div>
             </div>
+
+            {/* Resume Scan History Panel */}
+            {showHistory && (
+              <div className="form-card history-panel">
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <History size={18} color="var(--accent-primary)" /> Your Resume Scan History
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                  Saved securely to your account while signed in. History is cleared when you sign out without an account.
+                </p>
+                {historyLoading ? (
+                  <div className="skeleton skeleton-card" style={{ height: '80px' }} />
+                ) : resumeHistory.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1.5rem' }}>
+                    No resume scans yet. Run your first ATS analysis below.
+                  </p>
+                ) : (
+                  <div className="history-list">
+                    {resumeHistory.map((scan) => (
+                      <div key={scan.id} className="history-item" onClick={() => loadHistoryScan(scan.id)}>
+                        <div className="history-item-score" style={{
+                          background: scan.ats_score >= 75 ? 'rgba(16,185,129,0.15)' : scan.ats_score >= 50 ? 'rgba(245,158,11,0.15)' : 'rgba(244,63,94,0.15)',
+                          color: scan.ats_score >= 75 ? 'var(--accent-emerald)' : scan.ats_score >= 50 ? 'var(--accent-amber)' : '#fda4af',
+                        }}>
+                          {scan.ats_score}%
+                        </div>
+                        <div className="history-item-body">
+                          <div className="history-item-title">
+                            {scan.eligibility_emoji} {scan.eligibility || (scan.ats_score >= 75 ? 'Highly Eligible' : scan.ats_score >= 50 ? 'Moderately Eligible' : 'Low Compatibility')}
+                          </div>
+                          <div className="history-item-preview">{scan.job_preview || 'General AI/ML role'}…</div>
+                          <div className="history-item-date">{formatHistoryDate(scan.created_at)}</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="history-delete-btn"
+                          onClick={(e) => deleteHistoryScan(scan.id, e)}
+                          title="Delete scan"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {resumeError && (
               <div style={{ background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fda4af', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1601,6 +1716,11 @@ function App() {
             )}
           </div>
         )}
+
+        <footer className="app-footer">
+          <p><strong>PathAI</strong> — Final Project · ACT AI Course · Government of Pakistan</p>
+          <p className="app-footer-sub">Full-stack AI/ML learning platform with JWT auth, PostgreSQL persistence, and OpenRouter intelligence</p>
+        </footer>
       </main>
     </div>
   );
