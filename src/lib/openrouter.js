@@ -1,6 +1,7 @@
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 const FALLBACK_MODELS = [
+  "openrouter/free",
   "meta-llama/llama-3.3-70b-instruct:free",
   "deepseek/deepseek-r1:free",
   "google/gemini-2.0-flash-lite-preview-02-05:free",
@@ -14,6 +15,7 @@ export function getOpenRouterKey() {
 
 export async function callOpenRouter(messages, maxTokens = 1000, preferredModel = null) {
   const apiKey = getOpenRouterKey();
+  if (!apiKey) return { content: null, modelUsed: null };
   const modelsToTry = preferredModel ? [preferredModel] : FALLBACK_MODELS;
 
   for (const tryModel of modelsToTry) {
@@ -30,7 +32,8 @@ export async function callOpenRouter(messages, maxTokens = 1000, preferredModel 
           model: tryModel,
           messages,
           max_tokens: maxTokens
-        })
+        }),
+        signal: AbortSignal.timeout(12000)
       });
 
       if (!response.ok) continue;
