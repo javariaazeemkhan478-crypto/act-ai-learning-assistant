@@ -9,7 +9,12 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const itemId = Number(params.id);
+    // Next.js 16 provides dynamic route params asynchronously.
+    const { id } = await params;
+    const itemId = Number(id);
+    if (!Number.isInteger(itemId) || itemId < 1) {
+      return NextResponse.json({ error: 'Invalid roadmap item' }, { status: 400 });
+    }
 
     const item = await prisma.roadmapItem.findFirst({
       where: { id: itemId, roadmap: { userId } }
@@ -35,6 +40,7 @@ export async function PATCH(req, { params }) {
     });
 
   } catch (err) {
+    console.error('Roadmap toggle error:', err);
     return NextResponse.json({ error: 'Failed to toggle item' }, { status: 500 });
   }
 }
