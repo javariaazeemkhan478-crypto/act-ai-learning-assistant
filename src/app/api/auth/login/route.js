@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma, isDatabaseError } from '@/lib/prisma';
+import { prisma, isDatabaseError, databaseErrorMessage } from '@/lib/prisma';
 import { verifyPassword, signAccessToken, signRefreshToken } from '@/lib/auth';
 
 export async function POST(req) {
@@ -75,7 +75,7 @@ export async function POST(req) {
     console.error('Login Error:', err);
     if (isDatabaseError(err)) {
       return NextResponse.json(
-        { error: 'Database connection failed. Ensure DATABASE_URL is set on Vercel (use Supabase pooler URL).' },
+        { error: databaseErrorMessage(err) },
         { status: 503 }
       );
     }
