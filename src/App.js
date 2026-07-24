@@ -1106,7 +1106,7 @@ function App() {
           <div>
             <div className="page-header">
               <h1 className="page-title"><LayoutDashboard style={{ color: 'var(--accent-primary)' }} /> Progress Dashboard</h1>
-              <p className="page-desc">Track your learning streak, roadmap completion, and GitHub-style activity heatmaps.</p>
+              <p className="page-desc">Track your learning streak, roadmap completion, and yearly activity calendar.</p>
             </div>
 
             <div className="grid-stats">
@@ -1182,7 +1182,7 @@ function App() {
                     className={`palette-swatch ${heatmapPalette === 'emerald' ? 'active' : ''}`}
                     style={{ backgroundColor: '#10b981' }}
                     onClick={() => setHeatmapPalette('emerald')}
-                    title="GitHub Emerald (Classic)"
+                    title="Emerald (Classic)"
                   />
                   <div 
                     className={`palette-swatch ${heatmapPalette === 'cyan' ? 'active' : ''}`}
