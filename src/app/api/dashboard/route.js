@@ -9,8 +9,12 @@ export async function GET(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const requestedOffset = Number(searchParams.get('year_offset') || 0);
+    const yearOffset = Number.isInteger(requestedOffset) ? Math.min(Math.max(requestedOffset, 0), 10) : 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    today.setFullYear(today.getFullYear() - yearOffset);
     const activityStart = new Date(today);
     activityStart.setDate(activityStart.getDate() - 59);
 
@@ -100,6 +104,11 @@ export async function GET(req) {
       total_debug_queries: totalDebugQueries,
       total_resume_scans: totalResumeScans,
       roadmap: roadmapData,
+      activity_period: {
+        start: activityStart.toISOString().slice(0, 10),
+        end: today.toISOString().slice(0, 10),
+        year_offset: yearOffset
+      },
       activity_grid: activityGrid
     });
 

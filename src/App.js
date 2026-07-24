@@ -49,6 +49,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [theme, setTheme] = useState('dark');
   const [heatmapPalette, setHeatmapPalette] = useState('emerald');
+  const [activityYearOffset, setActivityYearOffset] = useState(0);
+  const [selectedActivity, setSelectedActivity] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -103,6 +105,7 @@ function App() {
   const [chatLoading, setChatLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [chatHistoryOpen, setChatHistoryOpen] = useState(false);
 
   // File Input Refs for options
   const fileInputRef = useRef(null);
@@ -241,7 +244,7 @@ function App() {
   // Fetch Dashboard Stats
   const fetchDashboardStats = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE}/dashboard`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE}/dashboard?year_offset=${activityYearOffset}`, getAuthHeaders());
       setDashboardStats(res.data);
       if (res.data.user) setCurrentUser(res.data.user);
     } catch (err) {
@@ -257,7 +260,7 @@ function App() {
     } catch (err) {
       setRoadmap(null);
     }
-  }, [getAuthHeaders]);
+  }, [getAuthHeaders, activityYearOffset]);
 
   const fetchRoadmapHistory = useCallback(async () => {
     try {
@@ -1153,16 +1156,21 @@ function App() {
               </div>
             </div>
 
-            {/* GitHub-Style 60-Day Streak Grid Heatmap */}
+            {/* GitHub-Style Yearly Activity Heatmap */}
             <div className="streak-grid-card">
               <div className="streak-grid-header">
                 <div>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Flame color="var(--accent-amber)" /> Learning Activity & Streak Grid (Last 60 Days)
+                    <Flame color="var(--accent-amber)" /> Learning Activity (Past Year)
                   </h3>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
-                    Visual representation of daily chats, debugs, and roadmap activity.
+                    Click a day to see its exact date and learning activity.
                   </p>
+                </div>
+
+                <div className="activity-year-controls">
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setActivityYearOffset((offset) => offset + 1); setSelectedActivity(null); }}>Previous Year</button>
+                  {activityYearOffset > 0 && <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setActivityYearOffset(0); setSelectedActivity(null); }}>Current Year</button>}
                 </div>
 
                 {/* Color Palette Selector */}
@@ -1207,15 +1215,22 @@ function App() {
               <div className={`palette-${heatmapPalette}`}>
                 <div className="heatmap-tiles-grid">
                   {dashboardStats?.activity_grid?.map((tile, idx) => (
-                    <div 
+                    <button
+                      type="button"
                       key={idx}
-                      className={`heatmap-tile level-${tile.level}`}
+                      className={`heatmap-tile level-${tile.level} ${selectedActivity?.date === tile.date ? 'selected' : ''}`}
                       title={`${tile.date}: ${tile.count} learning activity item(s)`}
+                      onClick={() => setSelectedActivity(tile)}
+                      aria-label={`${tile.date}: ${tile.count} activities`}
                     />
-                  )) || Array.from({ length: 60 }).map((_, idx) => (
+                  )) || Array.from({ length: 365 }).map((_, idx) => (
                     <div key={idx} className="heatmap-tile level-0" />
                   ))}
                 </div>
+              </div>
+
+              <div className="activity-date-detail">
+                {selectedActivity ? <><strong>{new Date(`${selectedActivity.date}T00:00:00`).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</strong><span>{selectedActivity.count} learning activity {selectedActivity.count === 1 ? 'item' : 'items'}</span></> : <span>Select a square to view its date and activity total.</span>}
               </div>
 
               <div className="heatmap-legend">
@@ -1436,11 +1451,15 @@ function App() {
             <div className="page-header">
               <h1 className="page-title"><MessageSquare style={{ color: 'var(--accent-cyan)' }} /> AI/ML Multimodal Chat & Study Toolkit</h1>
               <p className="page-desc">Ask questions via text, voice, file uploads, or live screen capture. Generate flashcards, quizzes & summaries.</p>
+              <button type="button" className="chat-history-toggle btn btn-secondary" onClick={() => setChatHistoryOpen(true)}>
+                <History size={16} /> Chat History ({chatSessions.length})
+              </button>
             </div>
 
             <div className="chat-layout">
               {/* Chat Sessions Sidebar Drawer */}
-              <div className="chat-sessions-sidebar">
+              {chatHistoryOpen && <div className="chat-history-backdrop" onClick={() => setChatHistoryOpen(false)} />}
+              <div className={`chat-sessions-sidebar ${chatHistoryOpen ? 'open' : ''}`}>
                 <button 
                   className="btn btn-primary" 
                   style={{ width: '100%', marginBottom: '1rem', fontSize: '0.85rem', padding: '0.6rem' }}
@@ -1462,7 +1481,7 @@ function App() {
                     <div 
                       key={session.id} 
                       className={`session-item ${currentSessionId === session.id ? 'active' : ''}`}
-                      onClick={() => handleSelectSession(session)}
+                      onClick={() => { handleSelectSession(session); setChatHistoryOpen(false); }}
                     >
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
                         {session.title}
