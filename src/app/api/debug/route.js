@@ -62,7 +62,7 @@ export async function POST(req) {
 
     let { content: aiResponse, modelUsed } = await callOpenRouter(messages, 1400);
 
-    if (!aiResponse) {
+    if (!aiResponse || /unable to analyze code snippet at this time/i.test(aiResponse)) {
       aiResponse = builtInDebugAnalysis(code, framework);
       modelUsed = 'built-in analyzer';
     }
