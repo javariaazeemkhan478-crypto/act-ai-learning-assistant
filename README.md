@@ -2,283 +2,305 @@
 
 # PathAI
 
-### AI-Powered Full-Stack Learning Platform for AI/ML Students
+### Your practical AI/ML learning companion - from first concept to career readiness
 
-**Final Project — ACT AI Course · Government of Pakistan**
+<p><strong>ACT AI Course Final Project | Government of Pakistan</strong></p>
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)](https://react.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.prisma.io/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+<a href="https://act-ai-learning-assistant-rais.vercel.app/"><img src="https://img.shields.io/badge/OPEN_THE_LIVE_APP-5B4BFF?style=for-the-badge&logo=vercel&logoColor=white" alt="Open the PathAI live application"></a>
+<a href="#visual-product-tour"><img src="https://img.shields.io/badge/EXPLORE_THE_PRODUCT_TOUR-00B8D9?style=for-the-badge&logo=readme&logoColor=white" alt="Explore the product tour"></a>
 
-[Live Demo](#) · [Report Bug](https://github.com/javariaazeemkhan478-crypto/act-ai-learning-assistant/issues) · [Request Feature](https://github.com/javariaazeemkhan478-crypto/act-ai-learning-assistant/issues)
+<br><br>
+
+<img src="https://readme-typing-svg.demolab.com?font=Inter&weight=700&size=24&pause=1200&color=6256FF&center=true&vCenter=true&width=900&lines=Personalized+AI%2FML+learning+roadmaps;Ask%2C+learn%2C+debug%2C+and+build+career+confidence;One+accessible+workspace+for+students+and+lifelong+learners" alt="PathAI animated introduction">
 
 </div>
 
----
+> [!TIP]
+> **Try PathAI now:** [https://act-ai-learning-assistant-rais.vercel.app/](https://act-ai-learning-assistant-rais.vercel.app/)
 
-## About PathAI
+PathAI is a browser-based learning platform that makes advanced AI and machine-learning education more approachable, organized, and actionable. It brings together personalized study planning, an AI tutor, code debugging, resume feedback, activity tracking, and professional notifications in one focused workspace.
 
-**PathAI** is a production-grade, full-stack AI/ML learning companion built as the **final project** for the **ACT AI Course** offered by the **Government of Pakistan**. It combines modern web engineering with real machine learning algorithms and large language model intelligence to deliver a complete learning ecosystem — from personalized roadmaps and doubt-solving chat to code debugging, ATS resume scoring, and progress analytics.
+Built as a final project for the **ACT AI Course, Government of Pakistan**, PathAI is designed for students, graduates, aspiring AI/ML professionals, career changers, and curious citizen learners who need a clearer path through fast-moving technical subjects.
 
-> **Project Name:** PathAI  
-> **Course:** ACT AI (Artificial Intelligence & Machine Learning)  
-> **Institution:** Government of Pakistan National AI Initiative  
-> **Architecture:** Full-stack monorepo — Next.js 16 frontend + serverless API + PostgreSQL
+<p align="center">
+  <img src="docs/screenshots/01-dashboard-overview.png" alt="PathAI dashboard with learning metrics and activity calendar" width="100%">
+</p>
 
----
+## Why PathAI
 
-## Key Highlights
+Learning AI/ML can feel fragmented: a learner may use one place for roadmaps, another for questions, another for debugging, and still another for career preparation. PathAI connects these stages of learning into a single practical journey.
 
-| Capability | Description |
-|---|---|
-| **Personalized AI Roadmaps** | 6–8 week structured curricula tailored to your goal, skill level, and weekly hours |
-| **Multimodal AI Tutor** | Context-aware chat with file upload, image analysis, screen capture, and voice input |
-| **ML-Powered ATS Scorer** | TF-IDF cosine similarity + keyword coverage + AI/ML skill matching with PDF upload |
-| **Resume Scan History** | Persistent scan history saved per authenticated user account |
-| **Code Debugger** | Multi-framework error analysis (PyTorch, TensorFlow, Scikit-Learn, Python, etc.) |
-| **Study Tools** | 3D flashcards and scored MCQ quizzes on any AI/ML topic |
-| **Activity Analytics** | 60-day GitHub-style heatmap, streak tracking, and completion metrics |
-| **Secure Authentication** | JWT-based login with bcrypt password hashing and session persistence |
+| Learner challenge | How PathAI responds |
+| --- | --- |
+| Not knowing what to study next | Generates structured week-by-week AI/ML roadmaps tailored to a goal, skill level, and available study hours. |
+| Getting stuck on complex concepts | Provides an AI tutor with chat, flashcards, quizzes, exports, and visual flowcharts. |
+| Losing time on code errors | Explains likely causes, shows a safer corrected pattern, and describes expected behavior. |
+| Unclear career readiness | Scores resumes against a target role and provides concrete improvement guidance. |
+| Difficulty staying consistent | Tracks completed roadmap topics, learning activity, and a rolling year of progress. |
+| Wanting to try before registering | Supports a private guest workspace as well as registered accounts. |
 
----
+## A complete learning journey
 
-## Architecture
+```mermaid
+flowchart LR
+    A[Choose an AI/ML goal] --> B[Generate a personalized roadmap]
+    B --> C[Complete weekly topics]
+    C --> D[Ask the AI tutor]
+    D --> E[Debug code and models]
+    E --> F[Improve resume for target roles]
+    F --> G[Review progress and activity]
+    G --> B
+```
+
+## Core capabilities
+
+### Personalized roadmap generator
+
+- Creates practical, week-by-week AI/ML learning plans.
+- Adapts the plan to a selected goal or sub-field, skill level, and hours available each week.
+- Lets learners tick off completed weeks and topics instantly.
+- Stores roadmap history so previous learning plans can be reviewed.
+- Exports a learning plan as a PDF.
+
+### AI tutor and doubt-solver chat
+
+- Starts new conversations and keeps a searchable chat history.
+- Works on desktop and mobile with a compact, accessible chat-history drawer.
+- Supports questions through text and file attachments.
+- Generates flashcards and MCQ quizzes for revision.
+- Exports notes as PDF.
+- Renders visual flowcharts directly as diagrams, not only as text prompts.
+- Lets learners remove conversations with a clear, professional confirmation dialog.
+
+### Multi-language code and model debugger
+
+- Accepts code snippets and error traces.
+- Supports language/framework selection or automatic detection.
+- Returns the likely reason, a safer corrected pattern, expected output or behavior, and next debugging steps.
+- Uses a dependable built-in analysis fallback when the external AI service is slow or unavailable, so learners still receive useful feedback.
+
+### AI/ML ATS resume scorer
+
+- Uploads a resume as PDF or text and compares it with a target job description.
+- Extracts selectable PDF text quickly and includes an OCR fallback for scanned PDF resumes.
+- Produces an eligibility score using TF-IDF similarity, keyword coverage, AI/ML skill matching, and section completeness.
+- Highlights missing target keywords, formatting concerns, and high-impact improvements.
+- Saves scan history and enables PDF export of results.
+
+### Progress dashboard
+
+- Displays current learning streak, roadmap completion, completed topics, chats, debugging sessions, and resume scans.
+- Shows a rolling 365-day GitHub-style learning activity calendar.
+- Supports earlier-year activity views and shows the exact date/activity details when a day is selected.
+- Offers color-theme choices for the activity visualization.
+
+### A thoughtful experience for every learner
+
+- A private guest workspace lets visitors use the learning tools without being forced to register first.
+- Registered accounts provide a personal signed-in experience.
+- Internal guest identifiers stay out of the interface.
+- Success, warning, and error messages use polished popup notifications instead of browser alerts.
+- Responsive layouts keep the main learning tools usable on phones as well as larger screens.
+
+## Visual product tour
+
+The screenshots below follow the normal PathAI journey in the same order a learner would use the platform.
+
+### 1. Start with a clear picture of progress
+
+The dashboard summarizes learning streak, roadmap completion, completed topics, and career-tool activity at a glance.
+
+<img src="docs/screenshots/01-dashboard-overview.png" alt="PathAI progress dashboard" width="100%">
+
+### 2. Review activity across the full year
+
+The interactive calendar covers the past year, supports prior-year browsing, and reveals an exact date and its learning activity when clicked.
+
+<img src="docs/screenshots/02-activity-calendar.png" alt="Full-year interactive learning activity calendar" width="100%">
+
+### 3. Build a tailored learning roadmap
+
+Choose a target area, skill level, and available weekly hours to generate a structured AI/ML curriculum.
+
+<img src="docs/screenshots/03-roadmap-builder.png" alt="AI ML roadmap generator and curriculum preferences" width="100%">
+
+### 4. Turn a plan into visible momentum
+
+Mark weekly roadmap items complete and keep the plan organized through the roadmap history.
+
+<img src="docs/screenshots/04-roadmap-completion.png" alt="Roadmap checklist with completed and upcoming weeks" width="100%">
+
+### 5. Learn with the AI tutor
+
+Use saved conversations, flashcards, MCQ quizzes, note export, and visual flowcharts in one learning space.
+
+<img src="docs/screenshots/05-ai-tutor-chat.png" alt="PathAI doubt solver chat with flashcards" width="100%">
+
+### 6. Paste a code problem
+
+Select a language/framework or use auto-detect, then submit a code snippet or error trace.
+
+<img src="docs/screenshots/06-debugger-input.png" alt="Code debugger input screen" width="100%">
+
+### 7. Receive an understandable debugging response
+
+The debugger explains the likely reason, presents a corrected pattern, and describes the expected behavior - including when fallback analysis is needed.
+
+<img src="docs/screenshots/07-debugger-analysis.png" alt="Debugger result with reason, corrected code, and expected behavior" width="100%">
+
+### 8. Upload a resume PDF
+
+PathAI extracts text from PDF resumes, with OCR support for image-based/scanned documents, and pairs it with a target job description.
+
+<img src="docs/screenshots/08-resume-pdf-upload.png" alt="ATS resume scorer with extracted PDF text" width="100%">
+
+### 9. See an easy-to-understand career score
+
+The ATS scorer presents a clear eligibility result for the chosen target role.
+
+<img src="docs/screenshots/09-ats-score.png" alt="Resume eligibility score summary" width="100%">
+
+### 10. Understand how the score was calculated
+
+The ML breakdown makes semantic similarity, keyword coverage, AI/ML skills, and section completeness transparent.
+
+<img src="docs/screenshots/10-ats-breakdown.png" alt="ATS scoring algorithm breakdown" width="100%">
+
+### 11. Act on professional improvement guidance
+
+The final view turns results into practical, high-impact resume actions.
+
+<img src="docs/screenshots/11-ats-guidance.png" alt="Actionable ATS resume improvement guidance" width="100%">
+
+## Technology stack
+
+| Area | Technology |
+| --- | --- |
+| Frontend | Next.js 16, React 19, responsive CSS |
+| Backend | Next.js API routes |
+| Database | PostgreSQL via Supabase and Prisma ORM |
+| Authentication | JWT-based guest and registered-user sessions |
+| AI integration | OpenRouter-compatible API with resilient local fallbacks |
+| PDF and OCR | PDF parsing, browser PDF rendering, and Tesseract.js OCR fallback |
+| Diagrams | Mermaid visual flowcharts |
+| Deployment | Vercel |
+
+## Architecture at a glance
 
 ```mermaid
 flowchart TB
-    subgraph Client["React 19 Client (PathAI UI)"]
-        Dashboard["Dashboard & Heatmap"]
-        Roadmap["Roadmap Generator"]
-        Chat["Doubt-Solver Chat"]
-        ATS["ATS Resume Scorer"]
-        Debug["Code Debugger"]
-    end
-
-    subgraph API["Next.js 16 API Routes"]
-        Auth["/api/auth/*"]
-        Resume["/api/resume/*"]
-        ChatAPI["/api/chat/*"]
-        ML["TF-IDF ATS Engine"]
-    end
-
-    subgraph Data["Persistence Layer"]
-        PG["PostgreSQL via Prisma"]
-        OR["OpenRouter LLM API"]
-    end
-
-    Client --> API
-    Auth --> PG
-    Resume --> ML
-    Resume --> PG
-    ChatAPI --> OR
-    ChatAPI --> PG
-    ML --> PG
+    U[Student / learner] --> W[PathAI web interface]
+    W --> A[Next.js API routes]
+    A --> D[(Supabase PostgreSQL)]
+    A --> AI[OpenRouter AI service]
+    A --> F[Built-in fallbacks]
+    F --> W
+    AI --> W
+    D --> W
 ```
 
----
+The fallback layer is intentional: core learning feedback such as debugger guidance remains useful even if an external AI request times out.
 
-## ML ATS Resume Scorer
-
-PathAI includes a **real machine learning pipeline** — not just LLM guessing — for resume evaluation:
-
-| Algorithm | Weight | Purpose |
-|---|---|---|
-| **TF-IDF + Cosine Similarity** | 35% | Semantic overlap between resume and job description |
-| **Keyword Coverage** | 35% | Match rate of job posting keywords found in resume |
-| **AI/ML Skill Detection** | 20% | Domain skill density (PyTorch, MLOps, NLP, etc.) |
-| **Section Completeness** | 10% | Standard ATS section header analysis |
-
-**Additional features:**
-- PDF resume upload with server-side text extraction (`pdf-parse`)
-- Eligibility percentage with tier labels (Highly / Moderately / Low Compatible)
-- Missing keyword analysis and actionable improvement suggestions
-- **Scan history** — all results saved to your account while signed in
-- Export evaluation report as PDF
-
----
-
-## Data Persistence & Authentication
-
-PathAI uses **JWT authentication** with **PostgreSQL** for all user data:
-
-| Data Type | Saved When Logged In |
-|---|---|
-| Learning roadmaps & checklist progress | ✅ |
-| Chat sessions & messages | ✅ |
-| Code debug queries | ✅ |
-| ATS resume scans & history | ✅ |
-| Streak & activity heatmap | ✅ |
-
-> **Note:** User history is tied to authenticated accounts. Data is **not retained** for guest/unauthenticated sessions. Sign in or create a free account to persist all your learning progress permanently.
-
----
-
-## Technology Stack
-
-| Layer | Technology |
-|---|---|
-| **Framework** | Next.js 16 (App Router + Turbopack) |
-| **Frontend** | React 19, Lucide Icons, Custom CSS Design System |
-| **Backend** | Next.js Serverless Route Handlers |
-| **Database** | PostgreSQL (Supabase-compatible) via Prisma ORM |
-| **Authentication** | JWT (`jsonwebtoken`) + bcrypt password hashing |
-| **AI Intelligence** | OpenRouter API (Llama 3.3, DeepSeek R1, Gemini Flash) |
-| **ML/NLP** | Custom TF-IDF engine, cosine similarity, keyword extraction |
-| **PDF Processing** | pdf-parse (server-side extraction) |
-| **Export** | jsPDF + html2canvas |
-| **Deployment** | Vercel (single full-stack deployment) |
-
----
-
-## Getting Started
+## Run PathAI locally
 
 ### Prerequisites
 
-- Node.js 18+
-- PostgreSQL database (local or Supabase)
-- OpenRouter API key ([openrouter.ai](https://openrouter.ai))
+- Node.js 20 or later
+- A PostgreSQL/Supabase project
+- An OpenRouter API key for AI-powered responses
 
-### Installation
+### Setup
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/javariaazeemkhan478-crypto/act-ai-learning-assistant.git
 cd act-ai-learning-assistant
-
-# 2. Install dependencies
-npm install --legacy-peer-deps
-
-# 3. Configure environment variables
-cp .env.example .env
+npm install
 ```
 
-Edit `.env`:
-```env
-DATABASE_URL="postgresql://postgres:password@127.0.0.1:5432/pathai_db"
-OPENROUTER_API_KEY="your_openrouter_api_key_here"
-JWT_SECRET="your_secure_jwt_secret_here"
-```
+Create a local environment file from the provided example:
 
 ```bash
-# 4. Sync database schema
-npx prisma db push
+cp .env.example .env.local
+```
 
-# 5. Start development server
+On Windows PowerShell, use:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Add your own credentials to `.env.local`, then create/update the database tables from a trusted development environment:
+
+```bash
+npx prisma db push
 npm run dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** → Create an account → Start learning!
+Open [http://localhost:3000](http://localhost:3000).
 
----
+## Environment variables
 
-## API Reference
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | Supabase **transaction pooler** connection string (port 6543) used by the serverless app. |
+| `DIRECT_URL` | Direct/session connection string (normally port 5432) used by Prisma schema operations and migrations. |
+| `OPENROUTER_API_KEY` | Enables AI-generated tutoring, roadmap, and analysis responses. |
+| `JWT_SECRET` | Long private secret used to sign authentication tokens. |
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/auth/register` | Register new student account |
-| `POST` | `/api/auth/login` | Authenticate and receive JWT |
-| `GET` | `/api/auth/me` | Current user profile & streak |
-| `POST` | `/api/roadmap/generate` | Generate AI learning roadmap |
-| `GET` | `/api/roadmap` | Fetch active roadmap checklist |
-| `PATCH` | `/api/roadmap/items/[id]/toggle` | Toggle topic completion |
-| `GET/POST` | `/api/chat/sessions` | Manage chat threads |
-| `POST` | `/api/chat` | Multimodal doubt-solver chat |
-| `POST` | `/api/chat/flashcards` | Generate study flashcards |
-| `POST` | `/api/chat/mcqs` | Generate practice MCQs |
-| `POST` | `/api/debug` | Code debugger & error explainer |
-| `POST` | `/api/resume/score` | ML ATS resume scoring |
-| `POST` | `/api/resume/parse-pdf` | Extract text from PDF resume |
-| `GET` | `/api/resume/history` | List user's resume scan history |
-| `GET/DELETE` | `/api/resume/history/[id]` | View or delete a past scan |
-| `GET` | `/api/health` | Server & database connectivity check |
-| `GET` | `/api/dashboard` | Activity stats & 60-day heatmap |
+Never commit actual credentials. Use `.env.local` locally and configure the same variables in Vercel's Project Settings for production.
 
----
+## Deploy on Vercel
 
-## Deploy to Vercel
+1. Import this GitHub repository into Vercel.
+2. Add `DATABASE_URL`, `DIRECT_URL`, `OPENROUTER_API_KEY`, and `JWT_SECRET` in **Project Settings -> Environment Variables**.
+3. For `DATABASE_URL`, use the Supabase transaction pooler URL on port `6543` and include `pgbouncer=true`.
+4. Run Prisma schema changes from a trusted development environment using the direct/session URL; do not rely on the production build to push the database schema.
+5. Deploy. Vercel runs the configured build, including Prisma client generation and the Next.js production build.
 
-### Step 1 — Create a Supabase Database (required for login)
+The current public deployment is: **[act-ai-learning-assistant-rais.vercel.app](https://act-ai-learning-assistant-rais.vercel.app/)**
 
-Vercel **cannot** use `localhost` PostgreSQL. You need a cloud database:
+## API surface
 
-1. Create a free project at [supabase.com](https://supabase.com)
-2. Go to **Project Settings → Database → Connection Pooling**
-3. Copy the **URI** (Transaction mode, port **6543**)
-4. It should look like:
-   ```
-   postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true
-   ```
+| Area | Main routes |
+| --- | --- |
+| Authentication | `/api/auth/guest`, `/api/auth/register`, `/api/auth/login`, `/api/auth/me` |
+| Dashboard | `/api/dashboard` |
+| Roadmaps | `/api/roadmap/generate`, `/api/roadmap/history`, `/api/roadmap/items/[id]/toggle` |
+| Tutor chat | `/api/chat`, `/api/chat/flashcards`, `/api/chat/mcqs`, `/api/chat/sessions` |
+| Debugging | `/api/debug` |
+| Resume scoring | `/api/resume/parse-pdf`, `/api/resume/score`, `/api/resume/history` |
 
-### Step 2 — Push database schema to Supabase
+## Project structure
 
-On your local machine, run once with your Supabase direct URL:
-
-```bash
-DATABASE_URL="postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres" npx prisma db push
+```text
+act-ai-learning-assistant/
+|-- src/
+|   |-- app/                 # Next.js pages and API routes
+|   |-- components/          # Reusable interface components
+|   `-- lib/                 # Prisma, auth, AI, PDF, and utility code
+|-- prisma/                  # PostgreSQL schema
+|-- public/                  # Public application assets
+|-- docs/screenshots/        # Product walkthrough images used in this README
+|-- .env.example             # Safe environment-variable template
+`-- package.json
 ```
 
-### Step 3 — Add Vercel Environment Variables
+## Project values
 
-In [Vercel Dashboard](https://vercel.com/dashboard) → Your Project → **Settings → Environment Variables**, add:
+PathAI is built around a simple idea: high-quality technical learning should not feel inaccessible. The platform emphasizes clear next steps, plain-language feedback, practical career support, and a welcoming path for both first-time visitors and returning learners.
 
-| Variable | Value |
-|---|---|
-| `DATABASE_URL` | Supabase **pooler** URL (port 6543, with `?pgbouncer=true`) |
-| `JWT_SECRET` | Any long random secret string |
-| `OPENROUTER_API_KEY` | Your OpenRouter API key |
+It is not only a tool for an AI/ML student. It is a model for how digital learning tools can help people develop modern skills, make informed career decisions, and participate more confidently in an AI-shaped world.
 
-### Step 4 — Deploy & Verify
+## Acknowledgement
 
-1. Redeploy after adding env vars (**Deployments → Redeploy**)
-2. Check health: `https://your-app.vercel.app/api/health`
-   - `database: "connected"` = login will work
-   - `database: "failed"` = fix `DATABASE_URL`
-
-> **Live demo:** [act-ai-learning-assistant-rais.vercel.app](https://act-ai-learning-assistant-rais.vercel.app/)
-
----
-
-## Project Structure
-
-```
-pathai/
-├── prisma/
-│   └── schema.prisma          # Database models (User, Roadmap, ResumeScan, etc.)
-├── src/
-│   ├── app/
-│   │   ├── api/               # Serverless API route handlers
-│   │   ├── layout.js          # Root layout
-│   │   └── page.js            # Entry point
-│   ├── lib/
-│   │   ├── atsScorer.js       # TF-IDF ML scoring engine
-│   │   ├── auth.js            # JWT & bcrypt utilities
-│   │   ├── openrouter.js      # LLM API client
-│   │   └── prisma.js          # Database client
-│   ├── App.js                 # Main application UI
-│   └── App.css                # Design system & components
-├── .env.example
-└── README.md
-```
-
----
-
-## Acknowledgements
-
-This project was developed as the **final capstone submission** for the **ACT AI Course** under the **Government of Pakistan's** national artificial intelligence education initiative. PathAI demonstrates applied full-stack engineering, machine learning integration, and AI product design for the next generation of AI/ML practitioners in Pakistan.
-
----
-
-## License
-
-Licensed under the [MIT License](LICENSE).
-
----
+**PathAI** was created as a final project for the **ACT AI Course, Government of Pakistan**. It demonstrates a full-stack approach to AI/ML learning support: personalized learning plans, AI-assisted help, practical debugging, career readiness, and measurable progress in one deployable application.
 
 <div align="center">
 
-**PathAI** · Built with ❤️ for AI/ML learners in Pakistan
+### Ready to learn with a clearer plan?
 
-*ACT AI Course · Government of Pakistan · 2026*
+<a href="https://act-ai-learning-assistant-rais.vercel.app/"><img src="https://img.shields.io/badge/Launch_PathAI-5B4BFF?style=for-the-badge&logo=vercel&logoColor=white" alt="Launch PathAI"></a>
+
+Built with purpose for AI/ML learners everywhere.
 
 </div>
