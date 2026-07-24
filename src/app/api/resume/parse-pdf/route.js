@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getUserIdFromAuthHeader } from '@/lib/auth';
 
+export const runtime = 'nodejs';
+export const maxDuration = 30;
+
+const MAX_FILE_SIZE = 4 * 1024 * 1024;
+
 export async function POST(req) {
   try {
     const userId = getUserIdFromAuthHeader(req);
@@ -13,6 +18,10 @@ export async function POST(req) {
 
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'PDF file is required' }, { status: 400 });
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'File is too large. Please upload a PDF smaller than 4 MB.' }, { status: 413 });
     }
 
     const fileName = file.name?.toLowerCase() || '';
@@ -29,7 +38,8 @@ export async function POST(req) {
       );
     }
 
-    const pdfParse = (await import('pdf-parse')).default;
+    const pdfParseModule = await import('pdf-parse');
+    const pdfParse = pdfParseModule.default || pdfParseModule;
     const parsed = await pdfParse(buffer);
 
     if (!parsed.text?.trim()) {
@@ -42,6 +52,6 @@ export async function POST(req) {
     return NextResponse.json({ text: parsed.text.trim(), pages: parsed.numpages });
   } catch (err) {
     console.error('PDF Parse Error:', err);
-    return NextResponse.json({ error: 'Failed to parse PDF file' }, { status: 500 });
+    return NextResponse.json({ error: 'Could not read this PDF. Try a text-based PDF, or paste the resume text instead.' }, { status: 422 });
   }
 }

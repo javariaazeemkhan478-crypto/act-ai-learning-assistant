@@ -330,6 +330,7 @@ function App() {
       }
     } catch (err) {
       console.error(err);
+      alert(err.response?.data?.error || 'Unable to delete this conversation. Please try again.');
     }
   };
 
@@ -405,6 +406,11 @@ function App() {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      setResumeError('Please upload a PDF smaller than 4 MB.');
+      if (resumePdfInputRef.current) resumePdfInputRef.current.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onloadend = () => {
       setAttachedImage({ name: file.name, base64: reader.result, type: 'document' });
@@ -665,10 +671,8 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await axios.post(`${API_BASE}/resume/parse-pdf`, formData, {
-        ...getAuthHeaders(),
-        headers: { ...getAuthHeaders().headers, 'Content-Type': 'multipart/form-data' },
-      });
+      // Do not set Content-Type here: the browser adds the multipart boundary.
+      const res = await axios.post(`${API_BASE}/resume/parse-pdf`, formData, getAuthHeaders());
       setResumeText(res.data.text);
     } catch (err) {
       handleApiError(err, setResumeError);
