@@ -16,7 +16,8 @@ export async function GET(req) {
     today.setHours(0, 0, 0, 0);
     today.setFullYear(today.getFullYear() - yearOffset);
     const activityStart = new Date(today);
-    activityStart.setDate(activityStart.getDate() - 59);
+    // Inclusive range: today plus the preceding 364 days = 365 calendar days.
+    activityStart.setDate(activityStart.getDate() - 364);
 
     // Run the dashboard work in parallel. The former implementation performed
     // 180 sequential counts for the heatmap, making every update feel delayed.
@@ -64,7 +65,7 @@ export async function GET(req) {
     recentDebugs.forEach(({ timestamp }) => addActivity(timestamp));
     recentResumes.forEach(({ createdAt }) => addActivity(createdAt));
     const activityGrid = [];
-    for (let i = 59; i >= 0; i--) {
+    for (let i = 364; i >= 0; i--) {
       const dayDate = new Date(today);
       dayDate.setDate(dayDate.getDate() - i);
       const dateStr = dayDate.toISOString().split('T')[0];
