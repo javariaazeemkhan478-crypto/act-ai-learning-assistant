@@ -36,6 +36,47 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+.confirm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(5px);
+}
+
+.confirm-modal {
+  width: min(440px, 100%);
+  padding: 1.75rem;
+  text-align: center;
+  color: var(--text-main);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  animation: notification-in 0.2s ease-out;
+}
+
+.confirm-modal-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 1rem;
+  display: grid;
+  place-items: center;
+  color: #fecdd3;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  border-radius: 50%;
+}
+
+.confirm-modal h2 { margin: 0 0 0.65rem; font-size: 1.25rem; }
+.confirm-modal p { margin: 0; color: var(--text-muted); line-height: 1.55; }
+.confirm-modal-actions { display: flex; justify-content: center; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.confirm-delete-btn { color: white; background: linear-gradient(135deg, #e11d48, #be123c); border: 1px solid #fb7185; }
+.confirm-delete-btn:hover { filter: brightness(1.08); }
+
 /* Sidebar Navigation */
 .sidebar {
   width: 260px;

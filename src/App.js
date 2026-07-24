@@ -133,6 +133,7 @@ function App() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [pendingChatDelete, setPendingChatDelete] = useState(null);
 
   // Theme Sync
   useEffect(() => {
@@ -352,7 +353,13 @@ function App() {
   // Delete Individual Chat Thread
   const handleDeleteSession = async (sessionId, e) => {
     e.stopPropagation();
-    if (!window.confirm('Delete this conversation permanently?')) return;
+    setPendingChatDelete(sessionId);
+  };
+
+  const confirmDeleteSession = async () => {
+    const sessionId = pendingChatDelete;
+    if (!sessionId) return;
+    setPendingChatDelete(null);
     try {
       await axios.delete(`${API_BASE}/chat/sessions/${sessionId}`, getAuthHeaders());
       const updated = chatSessions.filter(s => s.id !== sessionId);
@@ -927,6 +934,19 @@ function App() {
           <AlertCircle size={19} />
           <span>{notification.message}</span>
           <button type="button" onClick={() => setNotification(null)} aria-label="Dismiss notification"><X size={18} /></button>
+        </div>
+      )}
+      {pendingChatDelete && (
+        <div className="confirm-modal-backdrop" role="presentation">
+          <div className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-chat-title">
+            <div className="confirm-modal-icon"><Trash2 size={24} /></div>
+            <h2 id="delete-chat-title">Delete this conversation?</h2>
+            <p>This permanently removes the conversation and all of its messages. This action cannot be undone.</p>
+            <div className="confirm-modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => setPendingChatDelete(null)}>Keep Chat</button>
+              <button type="button" className="btn confirm-delete-btn" onClick={confirmDeleteSession}><Trash2 size={16} /> Delete Permanently</button>
+            </div>
+          </div>
         </div>
       )}
       {renderAuthModal()}
