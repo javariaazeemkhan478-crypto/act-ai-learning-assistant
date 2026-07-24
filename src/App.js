@@ -630,17 +630,29 @@ function App() {
 
   // Toggle Roadmap Item Completion
   const handleToggleItem = async (itemId) => {
+    const previousItem = roadmap?.items?.find((item) => item.id === itemId);
+    if (!previousItem) return;
+
+    // Give instant visual feedback, then reconcile with the saved server state.
+    setRoadmap((current) => current ? {
+      ...current,
+      items: current.items.map((item) => item.id === itemId ? { ...item, is_completed: !previousItem.is_completed } : item)
+    } : current);
+
     try {
       const res = await axios.patch(`${API_BASE}/roadmap/items/${itemId}/toggle`, {}, getAuthHeaders());
-      if (roadmap) {
-        const updatedItems = roadmap.items.map(item => item.id === itemId ? res.data : item);
-        setRoadmap({ ...roadmap, items: updatedItems });
-        fetchDashboardStats();
-        fetchRoadmapHistory();
-        showNotification(res.data.is_completed ? 'Task marked as completed.' : 'Task marked as incomplete.', 'success');
-      }
+      setRoadmap((current) => current ? {
+        ...current,
+        items: current.items.map((item) => item.id === itemId ? res.data : item)
+      } : current);
+      fetchDashboardStats();
+      fetchRoadmapHistory();
     } catch (err) {
       console.error(err);
+      setRoadmap((current) => current ? {
+        ...current,
+        items: current.items.map((item) => item.id === itemId ? previousItem : item)
+      } : current);
     }
   };
 

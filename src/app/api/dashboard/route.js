@@ -9,16 +9,25 @@ export async function GET(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { profile: true }
-    });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const activityStart = new Date(today);
+    activityStart.setDate(activityStart.getDate() - 59);
 
-    const roadmap = await prisma.roadmap.findFirst({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      include: { items: true }
-    });
+    // Run the dashboard work in parallel. The former implementation performed
+    // 180 sequential counts for the heatmap, making every update feel delayed.
+    const [user, roadmap, totalChats, totalDebugQueries, totalResumeScans, recentChats, recentDebugs, recentResumes] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, include: { profile: true } }),
+      prisma.roadmap.findFirst({ where: { userId }, orderBy: { createdAt: 'desc' }, include: { items: true } }),
+      prisma.chatMessage.count({ where: { userId, role: 'user' } }),
+      prisma.debugQuery.count({ where: { userId } }),
+      prisma.resumeScan.count({ where: { userId } }),
+      prisma.chatMessage.findMany({ where: { userId, role: 'user', timestamp: { gte: activityStart } }, select: { timestamp: true } }),
+      prisma.debugQuery.findMany({ where: { userId, timestamp: { gte: activityStart } }, select: { timestamp: true } }),
+      prisma.resumeScan.findMany({ where: { userId, createdAt: { gte: activityStart } }, select: { createdAt: true } })
+    ]);
+
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     let totalItems = 0;
     let completedItems = 0;
@@ -42,49 +51,20 @@ export async function GET(req) {
       };
     }
 
-    const totalChats = await prisma.chatMessage.count({
-      where: { userId, role: "user" }
-    });
-    const totalDebugQueries = await prisma.debugQuery.count({
-      where: { userId }
-    });
-    const totalResumeScans = await prisma.resumeScan.count({
-      where: { userId }
-    });
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    const activityByDate = new Map();
+    const addActivity = (date) => {
+      const key = date.toISOString().slice(0, 10);
+      activityByDate.set(key, (activityByDate.get(key) || 0) + 1);
+    };
+    recentChats.forEach(({ timestamp }) => addActivity(timestamp));
+    recentDebugs.forEach(({ timestamp }) => addActivity(timestamp));
+    recentResumes.forEach(({ createdAt }) => addActivity(createdAt));
     const activityGrid = [];
     for (let i = 59; i >= 0; i--) {
       const dayDate = new Date(today);
       dayDate.setDate(dayDate.getDate() - i);
-      const nextDayDate = new Date(dayDate);
-      nextDayDate.setDate(nextDayDate.getDate() + 1);
-
       const dateStr = dayDate.toISOString().split('T')[0];
-
-      const dayChats = await prisma.chatMessage.count({
-        where: {
-          userId,
-          role: "user",
-          timestamp: { gte: dayDate, lt: nextDayDate }
-        }
-      });
-      const dayDebugs = await prisma.debugQuery.count({
-        where: {
-          userId,
-          timestamp: { gte: dayDate, lt: nextDayDate }
-        }
-      });
-      const dayResumes = await prisma.resumeScan.count({
-        where: {
-          userId,
-          createdAt: { gte: dayDate, lt: nextDayDate }
-        }
-      });
-
-      const totalDayActivity = dayChats + dayDebugs + dayResumes;
+      const totalDayActivity = activityByDate.get(dateStr) || 0;
       let level = 0;
       if (totalDayActivity >= 7) level = 4;
       else if (totalDayActivity >= 4) level = 3;
