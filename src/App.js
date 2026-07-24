@@ -1085,9 +1085,11 @@ function App() {
                   <button className="btn btn-primary btn-sm" onClick={() => openAuth('login')} type="button">Sign In</button>
                   <button className="btn btn-secondary btn-sm" onClick={() => openAuth('register')} type="button">Register</button>
                 </>}
-                <button className="logout-btn" onClick={handleLogout} type="button" title={isGuest ? 'Start a new guest session' : 'Sign Out'}>
-                  <LogOut size={16} /> {isGuest ? 'New Guest' : 'Sign Out'}
-                </button>
+                {!isGuest && (
+                  <button className="logout-btn" onClick={handleLogout} type="button" title="Sign Out">
+                    <LogOut size={16} /> Sign Out
+                  </button>
+                )}
               </>
             )}
           </div>
