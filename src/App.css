@@ -8,6 +8,34 @@
   transition: background-color 0.3s ease;
 }
 
+.app-notification {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 200;
+  max-width: min(420px, calc(100vw - 2rem));
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 1rem 1.1rem;
+  border-radius: 12px;
+  color: white;
+  background: #1f2937;
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+  animation: notification-in 0.22s ease-out;
+}
+
+.app-notification.error { background: #9f1239; border-color: #fb7185; }
+.app-notification.success { background: #047857; border-color: #34d399; }
+.app-notification span { flex: 1; font-size: 0.9rem; line-height: 1.4; }
+.app-notification button { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 0; display: flex; }
+
+@keyframes notification-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Sidebar Navigation */
 .sidebar {
   width: 260px;

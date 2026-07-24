@@ -62,10 +62,8 @@ export async function POST(req) {
       };
     }
 
-    // Delete previous user roadmap
-    await prisma.roadmap.deleteMany({ where: { userId } });
-
-    // Create new Roadmap
+    // Keep earlier plans so the learner can return to their roadmap history.
+    // Create a new plan as the current/latest roadmap instead of overwriting it.
     const roadmap = await prisma.roadmap.create({
       data: {
         userId,

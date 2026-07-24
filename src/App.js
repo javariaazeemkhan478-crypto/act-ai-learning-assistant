@@ -90,6 +90,8 @@ function App() {
   const [hours, setHours] = useState(10);
   const [generatingRoadmap, setGeneratingRoadmap] = useState(false);
   const [roadmapError, setRoadmapError] = useState('');
+  const [roadmapHistory, setRoadmapHistory] = useState([]);
+  const [showRoadmapHistory, setShowRoadmapHistory] = useState(false);
 
   // Chat State
   const [chatSessions, setChatSessions] = useState([]);
@@ -130,6 +132,7 @@ function App() {
   const [resumeHistory, setResumeHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [notification, setNotification] = useState(null);
 
   // Theme Sync
   useEffect(() => {
@@ -147,6 +150,31 @@ function App() {
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
+
+  const showNotification = useCallback((message, type = 'error') => {
+    setNotification({ message, type, id: Date.now() });
+  }, []);
+
+  useEffect(() => {
+    if (!notification) return undefined;
+    const timeout = window.setTimeout(() => setNotification(null), 5500);
+    return () => window.clearTimeout(timeout);
+  }, [notification]);
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const status = error?.response?.status;
+        const url = error?.config?.url || '';
+        if (!(status === 404 && /\/roadmap$/.test(url))) {
+          showNotification(error?.response?.data?.error || error?.response?.data?.detail || 'Something went wrong. Please try again.');
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, [showNotification]);
 
   // Axios Config
   const getAuthHeaders = useCallback(() => ({
@@ -227,6 +255,15 @@ function App() {
       setRoadmap(res.data);
     } catch (err) {
       setRoadmap(null);
+    }
+  }, [getAuthHeaders]);
+
+  const fetchRoadmapHistory = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/roadmap/history`, getAuthHeaders());
+      setRoadmapHistory(res.data);
+    } catch (err) {
+      setRoadmapHistory([]);
     }
   }, [getAuthHeaders]);
 
@@ -315,6 +352,7 @@ function App() {
   // Delete Individual Chat Thread
   const handleDeleteSession = async (sessionId, e) => {
     e.stopPropagation();
+    if (!window.confirm('Delete this conversation permanently?')) return;
     try {
       await axios.delete(`${API_BASE}/chat/sessions/${sessionId}`, getAuthHeaders());
       const updated = chatSessions.filter(s => s.id !== sessionId);
@@ -328,9 +366,10 @@ function App() {
           setMessages([]);
         }
       }
+      await fetchChatSessions();
+      showNotification('Conversation deleted successfully.', 'success');
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.error || 'Unable to delete this conversation. Please try again.');
     }
   };
 
@@ -451,7 +490,7 @@ function App() {
 
       setAttachedImage({ name: 'Live_Screen_Capture.png', base64: base64Image, type: 'screenshot' });
     } catch (err) {
-      alert('Screen capture cancelled or permission denied.');
+      showNotification('Screen capture was cancelled or permission was denied.');
     }
   };
 
@@ -459,7 +498,7 @@ function App() {
   const startVoiceInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser. Please try Google Chrome.");
+      showNotification('Speech recognition is not supported in this browser. Please try Google Chrome.');
       return;
     }
     const recognition = new SpeechRecognition();
@@ -524,7 +563,7 @@ function App() {
       setMcqData(null);
     } catch (err) {
       handleApiError(err);
-      alert(err.response?.data?.error || 'Error generating flashcards. Please sign in and try again.');
+      showNotification(err.response?.data?.error || 'Could not generate flashcards. Please try again.');
     } finally {
       setChatLoading(false);
     }
@@ -540,7 +579,7 @@ function App() {
       setSelectedAnswers({});
     } catch (err) {
       handleApiError(err);
-      alert(err.response?.data?.error || 'Error generating MCQs. Please sign in and try again.');
+      showNotification(err.response?.data?.error || 'Could not generate MCQs. Please try again.');
     } finally {
       setChatLoading(false);
     }
@@ -573,6 +612,8 @@ function App() {
       }, getAuthHeaders());
       setRoadmap(res.data);
       fetchDashboardStats();
+      fetchRoadmapHistory();
+      showNotification('Your new roadmap is ready.', 'success');
     } catch (err) {
       handleApiError(err, setRoadmapError);
     } finally {
@@ -588,6 +629,8 @@ function App() {
         const updatedItems = roadmap.items.map(item => item.id === itemId ? res.data : item);
         setRoadmap({ ...roadmap, items: updatedItems });
         fetchDashboardStats();
+        fetchRoadmapHistory();
+        showNotification(res.data.is_completed ? 'Task marked as completed.' : 'Task marked as incomplete.', 'success');
       }
     } catch (err) {
       console.error(err);
@@ -620,7 +663,7 @@ function App() {
       setDebugResult(res.data);
       fetchDashboardStats();
     } catch (err) {
-      alert(handleApiError(err) || 'Error analyzing code snippet.');
+      showNotification(handleApiError(err) || 'Could not analyze this code. Please try again.');
     } finally {
       setDebugLoading(false);
     }
@@ -649,7 +692,35 @@ function App() {
     }
   };
 
-  // PDF Upload Handler for ATS Resume Scorer
+  const extractScannedPdfText = async (file) => {
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const { createWorker } = await import('tesseract.js');
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.min.mjs', import.meta.url).toString();
+    const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+    const pageCount = Math.min(pdf.numPages, 4);
+    const worker = await createWorker('eng');
+    const pages = [];
+
+    try {
+      for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+        const page = await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        const result = await worker.recognize(canvas);
+        if (result.data.text?.trim()) pages.push(result.data.text.trim());
+      }
+    } finally {
+      await worker.terminate();
+    }
+
+    return pages.join('\n\n').trim();
+  };
+
+  // PDF Upload Handler for ATS Resume Scorer. Text PDFs use the server; scans
+  // automatically fall back to in-browser OCR.
   const handleResumePdfUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -675,8 +746,19 @@ function App() {
       const res = await axios.post(`${API_BASE}/resume/parse-pdf`, formData, getAuthHeaders());
       setResumeText(res.data.text);
     } catch (err) {
-      handleApiError(err, setResumeError);
-      setUploadedFileName('');
+      try {
+        setResumeError('This looks like a scanned PDF. Reading it with OCR…');
+        const extractedText = await extractScannedPdfText(file);
+        if (!extractedText) throw new Error('No readable text was found in this PDF.');
+        setResumeText(extractedText);
+        setResumeError('');
+        showNotification('Resume text extracted successfully with OCR.', 'success');
+      } catch (ocrError) {
+        const message = ocrError?.message || 'Could not read this PDF. Please use a clearer PDF or paste its text.';
+        setResumeError(message);
+        showNotification(message);
+        setUploadedFileName('');
+      }
     } finally {
       setPdfUploading(false);
       if (resumePdfInputRef.current) resumePdfInputRef.current.value = '';
@@ -840,6 +922,13 @@ function App() {
 
   return (
     <div className="app-container">
+      {notification && (
+        <div className={`app-notification ${notification.type}`} role="alert">
+          <AlertCircle size={19} />
+          <span>{notification.message}</span>
+          <button type="button" onClick={() => setNotification(null)} aria-label="Dismiss notification"><X size={18} /></button>
+        </div>
+      )}
       {renderAuthModal()}
       {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
       {/* Hidden File Inputs for Attachment Options */}
@@ -1155,9 +1244,44 @@ function App() {
         {activeTab === 'roadmap' && (
           <div>
             <div className="page-header">
-              <h1 className="page-title"><Compass style={{ color: 'var(--accent-primary)' }} /> AI Roadmap Generator</h1>
-              <p className="page-desc">Build your personalized week-by-week AI/ML curriculum and export it as PDF.</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+                <div>
+                  <h1 className="page-title"><Compass style={{ color: 'var(--accent-primary)' }} /> AI Roadmap Generator</h1>
+                  <p className="page-desc">Build your personalized week-by-week AI/ML curriculum and tick off work as you complete it.</p>
+                </div>
+                <button type="button" className="btn btn-secondary" onClick={() => { setShowRoadmapHistory(!showRoadmapHistory); if (!showRoadmapHistory) fetchRoadmapHistory(); }}>
+                  <History size={16} /> {showRoadmapHistory ? 'Hide Roadmap History' : `Roadmap History (${roadmapHistory.length})`}
+                </button>
+              </div>
             </div>
+
+            {showRoadmapHistory && (
+              <div className="form-card history-panel">
+                <h3 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <History size={18} color="var(--accent-primary)" /> Saved Roadmaps
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Select a previous roadmap to continue its checklist.</p>
+                {roadmapHistory.length === 0 ? (
+                  <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1rem' }}>No saved roadmaps yet.</p>
+                ) : (
+                  <div className="history-list">
+                    {roadmapHistory.map((savedRoadmap) => {
+                      const completed = savedRoadmap.items.filter((item) => item.is_completed).length;
+                      return (
+                        <button key={savedRoadmap.id} type="button" className="history-item" onClick={() => { setRoadmap(savedRoadmap); setShowRoadmapHistory(false); }}>
+                          <div className="history-item-score" style={{ background: 'rgba(99,102,241,0.15)', color: 'var(--accent-primary)' }}>{completed}/{savedRoadmap.items.length}</div>
+                          <div className="history-item-body">
+                            <div className="history-item-title">{savedRoadmap.goal}</div>
+                            <div className="history-item-preview">{savedRoadmap.level} · {savedRoadmap.hours_per_week} hrs/week</div>
+                            <div className="history-item-date">Created {formatHistoryDate(savedRoadmap.created_at)}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Generator Form */}
             <div className="form-card">
