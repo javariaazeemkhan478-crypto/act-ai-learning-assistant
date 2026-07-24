@@ -160,38 +160,54 @@ function App() {
     safeRemoveStorage('pathai_user');
   }, []);
 
+  const startGuestSession = useCallback(async () => {
+    try {
+      const res = await axios.post(`${API_BASE}/auth/guest`);
+      const { access, user } = res.data;
+      setToken(access);
+      setCurrentUser(user);
+      safeSetStorage('pathai_token', access);
+      safeSetStorage('pathai_user', JSON.stringify(user));
+    } catch (err) {
+      console.error('Unable to start guest session:', err);
+    }
+  }, []);
+
   const openAuth = useCallback((mode = 'login', message = '') => {
     setAuthMode(mode);
     setAuthError(message);
     setShowAuthModal(true);
   }, []);
 
-  const requireAuth = useCallback((message = 'Please sign in or create an account to use this feature.') => {
+  const requireAuth = useCallback(() => {
     if (token) return true;
-    openAuth('register', message);
+    startGuestSession();
     return false;
-  }, [token, openAuth]);
+  }, [token, startGuestSession]);
 
   const handleApiError = useCallback((err, setError) => {
     const status = err?.response?.status;
     const msg = err?.response?.data?.error || err?.response?.data?.detail || err?.message || 'Something went wrong. Please try again.';
     if (status === 401) {
       handleLogout();
-      openAuth('login', 'Please sign in to continue. Create a free account if you are new.');
+      startGuestSession();
       if (setError) setError('Please sign in to continue.');
       return msg;
     }
     if (setError) setError(msg);
     return msg;
-  }, [handleLogout, openAuth]);
+  }, [handleLogout, startGuestSession]);
 
   const goToTab = useCallback((tab) => {
     setActiveTab(tab);
     setSidebarOpen(false);
-    if (!token && tab !== 'dashboard') {
-      openAuth('register', 'Create a free account (or sign in) to use Roadmap, Doubt Solver, Debugger, and ATS Scorer.');
-    }
-  }, [token, openAuth]);
+    if (!token) startGuestSession();
+  }, [token, startGuestSession]);
+
+  // Registration is optional: each visitor gets an isolated guest workspace.
+  useEffect(() => {
+    if (mounted && !token) startGuestSession();
+  }, [mounted, token, startGuestSession]);
 
   // Fetch Dashboard Stats
   const fetchDashboardStats = useCallback(async () => {
@@ -327,10 +343,10 @@ function App() {
         })
         .catch(() => {
           handleLogout();
-          openAuth('login', 'Your previous session expired. Please sign in again.');
+          startGuestSession();
         });
     }
-  }, [token, getAuthHeaders, handleLogout, openAuth]);
+  }, [token, getAuthHeaders, handleLogout, startGuestSession]);
 
   // Load Data on Tab Switch
   useEffect(() => {
@@ -816,6 +832,7 @@ function App() {
   };
 
   const userStreak = currentUser?.profile?.current_streak || dashboardStats?.current_streak || 1;
+  const isGuest = Boolean(currentUser?.is_guest);
 
   return (
     <div className="app-container">
@@ -936,19 +953,23 @@ function App() {
                   </div>
                   <span>{currentUser?.username}</span>
                 </div>
-                <button className="logout-btn" onClick={handleLogout} type="button" title="Sign Out">
-                  <LogOut size={16} /> Sign Out
+                {isGuest && <>
+                  <button className="btn btn-primary btn-sm" onClick={() => openAuth('login')} type="button">Sign In</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => openAuth('register')} type="button">Register</button>
+                </>}
+                <button className="logout-btn" onClick={handleLogout} type="button" title={isGuest ? 'Start a new guest session' : 'Sign Out'}>
+                  <LogOut size={16} /> {isGuest ? 'New Guest' : 'Sign Out'}
                 </button>
               </>
             )}
           </div>
         </header>
 
-        {!token && (
+        {isGuest && (
           <div className="guest-banner">
             <AlertCircle size={18} />
-            <span>You are browsing as a guest. <strong>Sign in or Register</strong> to use Roadmap, Doubt Solver, Debugger, and ATS Scorer.</span>
-            <button type="button" className="btn btn-primary btn-sm" onClick={() => openAuth('register')}>Create Free Account</button>
+            <span>You are using a private guest workspace. All learning tools work now; <strong>register or sign in</strong> if you want a personal account.</span>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => openAuth('register')}>Create Account</button>
           </div>
         )}
 

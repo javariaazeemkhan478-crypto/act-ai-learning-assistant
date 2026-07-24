@@ -69,6 +69,7 @@ export async function POST(req) {
         email: user.email,
         first_name: user.firstName,
         last_name: user.lastName,
+        is_guest: false,
         profile: {
           current_streak: user.profile?.currentStreak || 1,
           last_active_date: user.profile?.lastActiveDate || new Date()

@@ -105,6 +105,7 @@ export async function GET(req) {
         email: user.email,
         first_name: user.firstName,
         last_name: user.lastName,
+        is_guest: user.username.startsWith('guest_'),
         profile: {
           current_streak: user.profile?.currentStreak || 1,
           last_active_date: user.profile?.lastActiveDate || new Date()

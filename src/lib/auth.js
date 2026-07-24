@@ -14,7 +14,7 @@ export async function verifyPassword(password, hash) {
 
 export function signAccessToken(user) {
   return jwt.sign(
-    { userId: user.id, username: user.username, email: user.email },
+    { userId: user.id, username: user.username, email: user.email, isGuest: user.username.startsWith('guest_') },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
