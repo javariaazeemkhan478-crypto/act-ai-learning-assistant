@@ -72,6 +72,7 @@ function App() {
   }, []);
   
   // Auth Form State
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [authData, setAuthData] = useState({ username: '', password: '', email: '', first_name: '' });
   const [authError, setAuthError] = useState('');
@@ -339,6 +340,7 @@ function App() {
       safeSetStorage('pathai_username', trimmedUsername);
       setAuthData({ username: trimmedUsername, password: '', email: '', first_name: '' });
       setActiveTab('dashboard');
+      setShowAuthModal(false);
     } catch (err) {
       setAuthError(err.response?.data?.error || err.response?.data?.detail || err.message || 'Authentication failed. Please check inputs.');
     } finally {
@@ -642,11 +644,19 @@ function App() {
     );
   }
 
-  // If Not Authenticated, Render Auth Screen
-  if (!token) {
+  // If Not Authenticated, Render Auth Screen Modal
+  const renderAuthModal = () => {
+    if (!showAuthModal) return null;
     return (
-      <div className="auth-wrapper">
-        <div className="auth-card">
+      <div className="auth-wrapper" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.8)' }}>
+        <div className="auth-card" style={{ position: 'relative' }}>
+          <button 
+            type="button"
+            onClick={() => setShowAuthModal(false)} 
+            style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          >
+            <AlertCircle size={20} />
+          </button>
           <div className="brand-logo" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>
             <div className="brand-icon"><Sparkles size={22} /></div>
             <span className="brand-title" style={{ fontSize: '1.75rem' }}>PathAI</span>
@@ -752,12 +762,13 @@ function App() {
         </div>
       </div>
     );
-  }
+  };
 
   const userStreak = currentUser?.profile?.current_streak || dashboardStats?.current_streak || 1;
 
   return (
     <div className="app-container">
+      {renderAuthModal()}
       {/* Hidden File Inputs for Attachment Options */}
       <input 
         type="file" 
@@ -837,25 +848,41 @@ function App() {
         {/* Global Top Header — Streak, Theme, User & Sign Out */}
         <header className="app-header">
           <div className="app-header-left">
-            <span className="header-greeting">Welcome, <strong>{currentUser?.first_name || currentUser?.username}</strong></span>
+            <span className="header-greeting">Welcome, <strong>{currentUser?.first_name || currentUser?.username || 'Guest'}</strong></span>
           </div>
           <div className="app-header-right">
-            <div className="streak-badge">
-              <Flame size={18} fill="var(--accent-amber)" />
-              <span>{userStreak} Day Streak</span>
-            </div>
-            <button className="theme-toggle-btn" onClick={toggleTheme} type="button">
-              {theme === 'dark' ? <><Sun size={16} /> Light</> : <><Moon size={16} /> Dark</>}
-            </button>
-            <div className="header-user-chip">
-              <div className="avatar avatar-sm">
-                {currentUser?.username ? currentUser.username[0].toUpperCase() : 'U'}
-              </div>
-              <span>{currentUser?.username}</span>
-            </div>
-            <button className="logout-btn" onClick={handleLogout} type="button" title="Sign Out">
-              <LogOut size={16} /> Sign Out
-            </button>
+            {!token ? (
+              <>
+                <button className="theme-toggle-btn" onClick={toggleTheme} type="button">
+                  {theme === 'dark' ? <><Sun size={16} /> Light</> : <><Moon size={16} /> Dark</>}
+                </button>
+                <button className="btn btn-primary" onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}>
+                  Sign In
+                </button>
+                <button className="btn btn-secondary" onClick={() => { setAuthMode('register'); setShowAuthModal(true); }}>
+                  Register
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="streak-badge">
+                  <Flame size={18} fill="var(--accent-amber)" />
+                  <span>{userStreak} Day Streak</span>
+                </div>
+                <button className="theme-toggle-btn" onClick={toggleTheme} type="button">
+                  {theme === 'dark' ? <><Sun size={16} /> Light</> : <><Moon size={16} /> Dark</>}
+                </button>
+                <div className="header-user-chip">
+                  <div className="avatar avatar-sm">
+                    {currentUser?.username ? currentUser.username[0].toUpperCase() : 'U'}
+                  </div>
+                  <span>{currentUser?.username}</span>
+                </div>
+                <button className="logout-btn" onClick={handleLogout} type="button" title="Sign Out">
+                  <LogOut size={16} /> Sign Out
+                </button>
+              </>
+            )}
           </div>
         </header>
 
