@@ -9,11 +9,11 @@ import {
   Sparkles, Send, Trash2, LogOut, ArrowRight, BookOpen, 
   Zap, Clock, AlertCircle, RefreshCw, Sun, Moon,
   Mic, Download, FileText, Check, Flame, Palette, Paperclip, Camera,
-  Plus, Layers, HelpCircle, FileDown, Eye, Image, Upload, EyeOff, History
+  Plus, Layers, HelpCircle, FileDown, Eye, Image, Upload, EyeOff, History, Menu, X
 } from 'lucide-react';
 import './App.css';
 
-const API_BASE = process.env.REACT_APP_API_URL || '/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.REACT_APP_API_URL || '/api';
 
 const safeGetStorage = (key, fallback = '') => {
   if (typeof window !== 'undefined' && window.localStorage) {
@@ -49,6 +49,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [theme, setTheme] = useState('dark');
   const [heatmapPalette, setHeatmapPalette] = useState('emerald');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -158,6 +159,39 @@ function App() {
     safeRemoveStorage('pathai_token');
     safeRemoveStorage('pathai_user');
   }, []);
+
+  const openAuth = useCallback((mode = 'login', message = '') => {
+    setAuthMode(mode);
+    setAuthError(message);
+    setShowAuthModal(true);
+  }, []);
+
+  const requireAuth = useCallback((message = 'Please sign in or create an account to use this feature.') => {
+    if (token) return true;
+    openAuth('register', message);
+    return false;
+  }, [token, openAuth]);
+
+  const handleApiError = useCallback((err, setError) => {
+    const status = err?.response?.status;
+    const msg = err?.response?.data?.error || err?.response?.data?.detail || err?.message || 'Something went wrong. Please try again.';
+    if (status === 401) {
+      handleLogout();
+      openAuth('login', 'Please sign in to continue. Create a free account if you are new.');
+      if (setError) setError('Please sign in to continue.');
+      return msg;
+    }
+    if (setError) setError(msg);
+    return msg;
+  }, [handleLogout, openAuth]);
+
+  const goToTab = useCallback((tab) => {
+    setActiveTab(tab);
+    setSidebarOpen(false);
+    if (!token && tab !== 'dashboard') {
+      openAuth('register', 'Create a free account (or sign in) to use Roadmap, Doubt Solver, Debugger, and ATS Scorer.');
+    }
+  }, [token, openAuth]);
 
   // Fetch Dashboard Stats
   const fetchDashboardStats = useCallback(async () => {
@@ -291,9 +325,12 @@ function App() {
           setCurrentUser(res.data);
           safeSetStorage('pathai_user', JSON.stringify(res.data));
         })
-        .catch(() => handleLogout());
+        .catch(() => {
+          handleLogout();
+          openAuth('login', 'Your previous session expired. Please sign in again.');
+        });
     }
-  }, [token, getAuthHeaders, handleLogout]);
+  }, [token, getAuthHeaders, handleLogout, openAuth]);
 
   // Load Data on Tab Switch
   useEffect(() => {
@@ -420,6 +457,7 @@ function App() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if ((!chatInput.trim() && !attachedImage) || chatLoading) return;
+    if (!requireAuth('Sign in to use the Doubt Solver chat.')) return;
     const userMsg = chatInput;
     const imgData = attachedImage?.base64 || '';
     setChatInput('');
@@ -443,10 +481,11 @@ function App() {
       fetchChatSessions();
       fetchDashboardStats();
     } catch (err) {
+      const msg = handleApiError(err);
       setMessages(prev => [...prev, { 
         id: Date.now() + 1, 
         role: 'assistant', 
-        content: '⚠️ Sorry, there was an issue processing your request. Please try again.' 
+        content: `⚠️ ${msg || 'Sorry, there was an issue processing your request. Please try again.'}` 
       }]);
     } finally {
       setChatLoading(false);
@@ -455,19 +494,22 @@ function App() {
 
   // Quick Action Generators
   const handleGenerateFlashcards = async () => {
+    if (!requireAuth()) return;
     setChatLoading(true);
     try {
       const res = await axios.post(`${API_BASE}/chat/flashcards`, { topic: roadmap?.goal || 'AI/ML Fundamentals' }, getAuthHeaders());
       setFlashcardData(res.data);
       setMcqData(null);
     } catch (err) {
-      alert('Error generating flashcards.');
+      handleApiError(err);
+      alert(err.response?.data?.error || 'Error generating flashcards. Please sign in and try again.');
     } finally {
       setChatLoading(false);
     }
   };
 
   const handleGenerateMCQs = async () => {
+    if (!requireAuth()) return;
     setChatLoading(true);
     try {
       const res = await axios.post(`${API_BASE}/chat/mcqs`, { topic: roadmap?.goal || 'AI/ML Fundamentals' }, getAuthHeaders());
@@ -475,7 +517,8 @@ function App() {
       setFlashcardData(null);
       setSelectedAnswers({});
     } catch (err) {
-      alert('Error generating MCQs.');
+      handleApiError(err);
+      alert(err.response?.data?.error || 'Error generating MCQs. Please sign in and try again.');
     } finally {
       setChatLoading(false);
     }
@@ -499,6 +542,7 @@ function App() {
   // Generate AI Roadmap
   const handleGenerateRoadmap = async (e) => {
     e.preventDefault();
+    if (!requireAuth('Sign in to generate your personalized AI/ML roadmap.')) return;
     setGeneratingRoadmap(true);
     setRoadmapError('');
     try {
@@ -508,7 +552,7 @@ function App() {
       setRoadmap(res.data);
       fetchDashboardStats();
     } catch (err) {
-      setRoadmapError('Failed to generate roadmap. Please try again.');
+      handleApiError(err, setRoadmapError);
     } finally {
       setGeneratingRoadmap(false);
     }
@@ -544,6 +588,7 @@ function App() {
   const handleDebugCode = async (e) => {
     e.preventDefault();
     if (!codeInput.trim() || debugLoading) return;
+    if (!requireAuth('Sign in to use the Code Debugger.')) return;
     setDebugLoading(true);
     try {
       const res = await axios.post(`${API_BASE}/debug`, {
@@ -553,7 +598,7 @@ function App() {
       setDebugResult(res.data);
       fetchDashboardStats();
     } catch (err) {
-      alert('Error analyzing code snippet.');
+      alert(handleApiError(err) || 'Error analyzing code snippet.');
     } finally {
       setDebugLoading(false);
     }
@@ -563,6 +608,7 @@ function App() {
   const handleScoreResume = async (e) => {
     e.preventDefault();
     if (!resumeText.trim() || !jobDescription.trim() || resumeLoading) return;
+    if (!requireAuth('Sign in to score your resume with the ATS tool.')) return;
     setResumeLoading(true);
     setResumeError('');
     setResumeResult(null);
@@ -575,7 +621,7 @@ function App() {
       fetchDashboardStats();
       fetchResumeHistory();
     } catch (err) {
-      setResumeError(err.response?.data?.error || 'Error scoring resume. Please try again.');
+      handleApiError(err, setResumeError);
     } finally {
       setResumeLoading(false);
     }
@@ -585,6 +631,10 @@ function App() {
   const handleResumePdfUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (!requireAuth('Sign in to upload and score your resume.')) {
+      if (resumePdfInputRef.current) resumePdfInputRef.current.value = '';
+      return;
+    }
     setResumeError('');
     setUploadedFileName(file.name);
 
@@ -605,7 +655,7 @@ function App() {
       });
       setResumeText(res.data.text);
     } catch (err) {
-      setResumeError(err.response?.data?.error || 'Failed to extract text from PDF.');
+      handleApiError(err, setResumeError);
       setUploadedFileName('');
     } finally {
       setPdfUploading(false);
@@ -654,8 +704,9 @@ function App() {
             type="button"
             onClick={() => setShowAuthModal(false)} 
             style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            aria-label="Close"
           >
-            <AlertCircle size={20} />
+            <X size={20} />
           </button>
           <div className="brand-logo" style={{ justifyContent: 'center', marginBottom: '1.5rem' }}>
             <div className="brand-icon"><Sparkles size={22} /></div>
@@ -769,6 +820,7 @@ function App() {
   return (
     <div className="app-container">
       {renderAuthModal()}
+      {sidebarOpen && <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />}
       {/* Hidden File Inputs for Attachment Options */}
       <input 
         type="file" 
@@ -786,16 +838,19 @@ function App() {
       />
 
       {/* Sidebar Navigation */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="brand-logo">
           <div className="brand-icon"><Sparkles size={22} /></div>
           <span className="brand-title">PathAI</span>
+          <button type="button" className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} aria-label="Close menu">
+            <X size={18} />
+          </button>
         </div>
 
         <nav className="nav-links">
           <div 
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => goToTab('dashboard')}
           >
             <LayoutDashboard size={18} />
             <span>Dashboard</span>
@@ -803,7 +858,7 @@ function App() {
 
           <div 
             className={`nav-item ${activeTab === 'roadmap' ? 'active' : ''}`}
-            onClick={() => setActiveTab('roadmap')}
+            onClick={() => goToTab('roadmap')}
           >
             <Compass size={18} />
             <span>Roadmap Generator</span>
@@ -811,7 +866,7 @@ function App() {
 
           <div 
             className={`nav-item ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chat')}
+            onClick={() => goToTab('chat')}
           >
             <MessageSquare size={18} />
             <span>Doubt-Solver Chat</span>
@@ -819,7 +874,7 @@ function App() {
 
           <div 
             className={`nav-item ${activeTab === 'debug' ? 'active' : ''}`}
-            onClick={() => setActiveTab('debug')}
+            onClick={() => goToTab('debug')}
           >
             <Bug size={18} />
             <span>Code Debugger</span>
@@ -827,7 +882,7 @@ function App() {
 
           <div 
             className={`nav-item ${activeTab === 'ats' ? 'active' : ''}`}
-            onClick={() => setActiveTab('ats')}
+            onClick={() => goToTab('ats')}
           >
             <FileText size={18} />
             <span>ATS Resume Scorer</span>
@@ -848,6 +903,9 @@ function App() {
         {/* Global Top Header — Streak, Theme, User & Sign Out */}
         <header className="app-header">
           <div className="app-header-left">
+            <button type="button" className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+              <Menu size={20} />
+            </button>
             <span className="header-greeting">Welcome, <strong>{currentUser?.first_name || currentUser?.username || 'Guest'}</strong></span>
           </div>
           <div className="app-header-right">
@@ -856,10 +914,10 @@ function App() {
                 <button className="theme-toggle-btn" onClick={toggleTheme} type="button">
                   {theme === 'dark' ? <><Sun size={16} /> Light</> : <><Moon size={16} /> Dark</>}
                 </button>
-                <button className="btn btn-primary" onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}>
+                <button className="btn btn-primary" onClick={() => openAuth('login')}>
                   Sign In
                 </button>
-                <button className="btn btn-secondary" onClick={() => { setAuthMode('register'); setShowAuthModal(true); }}>
+                <button className="btn btn-secondary" onClick={() => openAuth('register')}>
                   Register
                 </button>
               </>
@@ -885,6 +943,14 @@ function App() {
             )}
           </div>
         </header>
+
+        {!token && (
+          <div className="guest-banner">
+            <AlertCircle size={18} />
+            <span>You are browsing as a guest. <strong>Sign in or Register</strong> to use Roadmap, Doubt Solver, Debugger, and ATS Scorer.</span>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => openAuth('register')}>Create Free Account</button>
+          </div>
+        )}
 
         {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
@@ -1028,7 +1094,7 @@ function App() {
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
                   Create an updated AI/ML week-by-week roadmap tailored to your target field and study hours.
                 </p>
-                <button className="btn btn-primary" onClick={() => setActiveTab('roadmap')}>
+                <button className="btn btn-primary" onClick={() => goToTab('roadmap')}>
                   Go to Roadmap Generator <ArrowRight size={16} />
                 </button>
               </div>
@@ -1040,7 +1106,7 @@ function App() {
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
                   Stuck on a concept like Backpropagation or Attention mechanisms? Get simplified explanations with examples.
                 </p>
-                <button className="btn btn-secondary" onClick={() => setActiveTab('chat')}>
+                <button className="btn btn-secondary" onClick={() => goToTab('chat')}>
                   Open Doubt Solver <ArrowRight size={16} />
                 </button>
               </div>
@@ -1052,7 +1118,7 @@ function App() {
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
                   Evaluate your resume for AI/ML engineering roles out of 100 with actionable keyword suggestions.
                 </p>
-                <button className="btn btn-secondary" onClick={() => setActiveTab('ats')}>
+                <button className="btn btn-secondary" onClick={() => goToTab('ats')}>
                   Score My Resume <ArrowRight size={16} />
                 </button>
               </div>
