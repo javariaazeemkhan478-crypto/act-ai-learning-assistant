@@ -20,7 +20,7 @@ export async function GET(req) {
 
     return NextResponse.json({
       id: user.id,
-      username: user.username,
+      username: user.username.startsWith('guest_') ? 'Guest learner' : user.username,
       email: user.email,
       first_name: user.firstName,
       last_name: user.lastName,

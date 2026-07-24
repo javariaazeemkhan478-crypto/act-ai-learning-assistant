@@ -15,6 +15,39 @@ import './App.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.REACT_APP_API_URL || '/api';
 
+function MermaidDiagram({ chart }) {
+  const containerRef = useRef(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    const render = async () => {
+      try {
+        const { default: mermaid } = await import('mermaid');
+        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'strict' });
+        const id = `pathai-flowchart-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const { svg } = await mermaid.render(id, chart);
+        if (active && containerRef.current) containerRef.current.innerHTML = svg;
+      } catch (err) {
+        if (active) setError(true);
+      }
+    };
+    render();
+    return () => { active = false; };
+  }, [chart]);
+
+  if (error) return <pre className="mermaid-fallback">{chart}</pre>;
+  return <div ref={containerRef} className="mermaid-diagram" aria-label="Generated visual flowchart" />;
+}
+
+const markdownComponents = {
+  code({ className, children, ...props }) {
+    const content = String(children).replace(/\n$/, '');
+    if (className?.includes('language-mermaid')) return <MermaidDiagram chart={content} />;
+    return <code className={className} {...props}>{children}</code>;
+  }
+};
+
 const safeGetStorage = (key, fallback = '') => {
   if (typeof window !== 'undefined' && window.localStorage) {
     try {
@@ -171,7 +204,7 @@ function App() {
       (error) => {
         const status = error?.response?.status;
         const url = error?.config?.url || '';
-        if (!(status === 404 && /\/roadmap$/.test(url))) {
+        if (!error?.config?.skipGlobalError && !(status === 404 && /\/roadmap$/.test(url))) {
           showNotification(error?.response?.data?.error || error?.response?.data?.detail || 'Something went wrong. Please try again.');
         }
         return Promise.reject(error);
@@ -525,11 +558,11 @@ function App() {
   };
 
   // Send Doubt Chat Message
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if ((!chatInput.trim() && !attachedImage) || chatLoading) return;
+  const handleSendMessage = async (e, messageOverride = '') => {
+    e?.preventDefault();
+    if ((!(messageOverride || chatInput.trim()) && !attachedImage) || chatLoading) return;
     if (!requireAuth('Sign in to use the Doubt Solver chat.')) return;
-    const userMsg = chatInput;
+    const userMsg = messageOverride || chatInput;
     const imgData = attachedImage?.base64 || '';
     setChatInput('');
     setAttachedImage(null);
@@ -607,7 +640,8 @@ function App() {
   };
 
   const handleGenerateInfographic = () => {
-    setChatInput('Generate a structured visual Mermaid flowchart of the key concepts in my active learning topic.');
+    const topic = roadmap?.goal || 'AI/ML Fundamentals';
+    handleSendMessage(null, `Create an infographic-style learning flowchart for ${topic}. Return ONLY one valid Mermaid flowchart code block (starting with \`\`\`mermaid), using short labels, vivid stages, and a clear top-to-bottom learning path. Do not add an explanation.`);
   };
 
   // Generate AI Roadmap
@@ -765,7 +799,10 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
       // Do not set Content-Type here: the browser adds the multipart boundary.
-      const res = await axios.post(`${API_BASE}/resume/parse-pdf`, formData, getAuthHeaders());
+      const res = await axios.post(`${API_BASE}/resume/parse-pdf`, formData, {
+        ...getAuthHeaders(),
+        skipGlobalError: true
+      });
       setResumeText(res.data.text);
     } catch (err) {
       try {
@@ -1079,7 +1116,7 @@ function App() {
                   <div className="avatar avatar-sm">
                     {currentUser?.username ? currentUser.username[0].toUpperCase() : 'U'}
                   </div>
-                  <span>{currentUser?.username}</span>
+                  <span>{isGuest ? 'Guest learner' : currentUser?.username}</span>
                 </div>
                 {isGuest && <>
                   <button className="btn btn-primary btn-sm" onClick={() => openAuth('login')} type="button">Sign In</button>
@@ -1611,7 +1648,7 @@ function App() {
                             />
                           </div>
                         )}
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                           {msg.content}
                         </ReactMarkdown>
                       </div>
