@@ -50,9 +50,6 @@ Learning AI/ML can feel fragmented: a learner may use one place for roadmaps, an
 | Live deployment | [Open the working PathAI app](https://act-ai-learning-assistant-rais.vercel.app/). |
 | Screenshots and run guide | This README includes an 11-step visual walkthrough and complete local/deployment instructions below. |
 
-> [!IMPORTANT]
-> For final submission, open both links above in an incognito/private browser window. Confirm that the repository is public and that the live app opens before submitting the repository URL on the portal.
-
 ## A complete learning journey
 
 ```mermaid
