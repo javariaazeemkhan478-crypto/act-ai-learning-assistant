@@ -106,7 +106,7 @@ function App() {
   const [token, setToken] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState(() => safeGetStorage('pathai_theme', 'light'));
   const [heatmapPalette, setHeatmapPalette] = useState('emerald');
   const [activityYearOffset, setActivityYearOffset] = useState(0);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -884,16 +884,16 @@ function App() {
   // Show sleek loader while restoring session on mount (prevents login screen flicker!)
   if (!mounted) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#0a0d14', color: '#fff' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-          <div style={{ background: 'linear-gradient(135deg, #6366f1, #10b981)', padding: '0.6rem', borderRadius: '12px', display: 'flex' }}>
+      <div className="app-loading-screen" data-theme={theme}>
+        <div className="app-loading-brand">
+          <div className="app-loading-icon">
             <Sparkles size={24} color="#fff" />
           </div>
-          <span style={{ fontSize: '1.8rem', fontWeight: 800, background: 'linear-gradient(135deg, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <span className="app-loading-title">
             PathAI
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', fontSize: '0.95rem' }}>
+        <div className="app-loading-message">
           <RefreshCw className="spin" size={18} color="#10b981" /> Restoring learning session...
         </div>
       </div>
