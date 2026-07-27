@@ -2095,7 +2095,6 @@ function App() {
 
         <footer className="app-footer">
           <p><strong>PathAI</strong> — Final Project · ACT AI Course · Government of Pakistan</p>
-          <p className="app-footer-sub">Full-stack AI/ML learning platform with JWT auth, PostgreSQL persistence, and OpenRouter intelligence</p>
         </footer>
       </main>
     </div>
