@@ -9,6 +9,32 @@ const DOUBT_SOLVER_PROMPT = (
   "machine learning use cases. Use formatted markdown with code snippets where helpful."
 );
 
+// Mermaid is deliberately generated locally for the Visual Flowchart action.
+// This avoids malformed model output and gives learners an instant, dependable diagram.
+function createVisualFlowchart(rawTopic) {
+  const topic = String(rawTopic || 'AI ML Foundations')
+    .replace(/[^a-zA-Z0-9\s/-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 56) || 'AI ML Foundations';
+
+  return `## Visual learning flowchart: ${topic}
+
+Follow this practical path, then return to any stage whenever you need revision.
+
+\`\`\`mermaid
+flowchart TD
+    A["Start: ${topic}"] --> B["Build foundations"]
+    B --> C["Learn core concepts"]
+    C --> D["Practice with code"]
+    D --> E["Build a small project"]
+    E --> F["Review and improve"]
+    F --> G["Apply your skills"]
+\`\`\`
+
+**Tip:** Complete each stage at your own pace and use the AI tutor whenever a concept needs a clearer explanation.`;
+}
+
 export async function POST(req) {
   try {
     const userId = getUserIdFromAuthHeader(req);
@@ -16,7 +42,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { message = '', image_url = '', session_id = null } = await req.json();
+    const { message = '', image_url = '', session_id = null, visual_flowchart = false, topic = '' } = await req.json();
 
     if (!message && !image_url) {
       return NextResponse.json({ error: 'Message content or image attachment is required' }, { status: 400 });
@@ -70,10 +96,16 @@ export async function POST(req) {
       }
     }
 
-    let { content: aiReply, modelUsed } = await callOpenRouter(messagesPayload, 1000);
-
-    if (!aiReply) {
-      aiReply = "I am currently experiencing a network timeout with the OpenRouter model. Please try again in a moment!";
+    let aiReply;
+    let modelUsed = null;
+    if (visual_flowchart) {
+      aiReply = createVisualFlowchart(topic || message);
+      modelUsed = 'PathAI built-in visual flowchart';
+    } else {
+      ({ content: aiReply, modelUsed } = await callOpenRouter(messagesPayload, 1000));
+      if (!aiReply) {
+        aiReply = "I am currently experiencing a network timeout with the OpenRouter model. Please try again in a moment!";
+      }
     }
 
     await prisma.chatMessage.create({

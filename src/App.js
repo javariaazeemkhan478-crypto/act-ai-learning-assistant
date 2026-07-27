@@ -15,29 +15,54 @@ import './App.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || process.env.REACT_APP_API_URL || '/api';
 
+const SAFE_FALLBACK_FLOWCHART = `flowchart TD
+    A["Choose a learning goal"] --> B["Learn the foundations"]
+    B --> C["Practice with code"]
+    C --> D["Build a project"]
+    D --> E["Review your progress"]`;
+
 function MermaidDiagram({ chart }) {
   const containerRef = useRef(null);
-  const [error, setError] = useState(false);
+  const [usingFallback, setUsingFallback] = useState(false);
 
   useEffect(() => {
     let active = true;
+    setUsingFallback(false);
     const render = async () => {
-      try {
+      const renderChart = async (definition) => {
         const { default: mermaid } = await import('mermaid');
         mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'strict' });
+        const isValid = await mermaid.parse(definition, { suppressErrors: true });
+        if (!isValid) throw new Error('Invalid Mermaid definition');
         const id = `pathai-flowchart-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        const { svg } = await mermaid.render(id, chart);
+        const { svg } = await mermaid.render(id, definition);
+        if (svg.includes('Syntax error')) throw new Error('Mermaid render error');
         if (active && containerRef.current) containerRef.current.innerHTML = svg;
+      };
+
+      try {
+        await renderChart(chart);
       } catch (err) {
-        if (active) setError(true);
+        try {
+          await renderChart(SAFE_FALLBACK_FLOWCHART);
+          if (active) setUsingFallback(true);
+        } catch (fallbackErr) {
+          if (active && containerRef.current) {
+            containerRef.current.textContent = 'The visual flowchart could not be displayed.';
+          }
+        }
       }
     };
     render();
     return () => { active = false; };
   }, [chart]);
 
-  if (error) return <pre className="mermaid-fallback">{chart}</pre>;
-  return <div ref={containerRef} className="mermaid-diagram" aria-label="Generated visual flowchart" />;
+  return (
+    <div className="mermaid-diagram-wrapper">
+      <div ref={containerRef} className="mermaid-diagram" aria-label="Generated visual flowchart" />
+      {usingFallback && <p className="mermaid-note">Showing PathAI's safe visual learning path.</p>}
+    </div>
+  );
 }
 
 const markdownComponents = {
@@ -639,9 +664,28 @@ function App() {
     });
   };
 
-  const handleGenerateInfographic = () => {
+  const handleGenerateInfographic = async () => {
+    if (chatLoading || !requireAuth('Sign in to generate a visual learning flowchart.')) return;
     const topic = roadmap?.goal || 'AI/ML Fundamentals';
-    handleSendMessage(null, `Create an infographic-style learning flowchart for ${topic}. Return ONLY one valid Mermaid flowchart code block (starting with \`\`\`mermaid), using short labels, vivid stages, and a clear top-to-bottom learning path. Do not add an explanation.`);
+    const requestLabel = `Visual learning flowchart for ${topic}`;
+    setMessages(prev => [...prev, { id: Date.now(), role: 'user', content: requestLabel }]);
+    setChatLoading(true);
+    try {
+      const res = await axios.post(`${API_BASE}/chat`, {
+        message: requestLabel,
+        session_id: currentSessionId,
+        visual_flowchart: true,
+        topic
+      }, getAuthHeaders());
+      if (!currentSessionId && res.data.session_id) setCurrentSessionId(res.data.session_id);
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'assistant', content: res.data.reply }]);
+      fetchChatSessions();
+      fetchDashboardStats();
+    } catch (err) {
+      showNotification(handleApiError(err) || 'Could not create the visual flowchart. Please try again.', 'error');
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   // Generate AI Roadmap

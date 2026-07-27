@@ -39,6 +39,20 @@ Learning AI/ML can feel fragmented: a learner may use one place for roadmaps, an
 | Difficulty staying consistent | Tracks completed roadmap topics, learning activity, and a rolling year of progress. |
 | Wanting to try before registering | Supports a private guest workspace as well as registered accounts. |
 
+## Final-project submission at a glance
+
+| Requirement | PathAI evidence |
+| --- | --- |
+| Original idea solving a real problem | PathAI addresses the fragmented AI/ML learning journey: planning what to learn, getting help, debugging code, and improving career readiness from one workspace. |
+| Complete end-to-end app | Learners can use the dashboard, roadmap generator, tutor chat, code debugger, resume scorer, history views, exports, and responsive mobile interface. |
+| AI-powered feature | The tutor, roadmap generation, code debugger, flashcards, quizzes, and resume guidance use an OpenRouter-compatible AI service with purpose-written instructions. |
+| Public source code | [View the GitHub repository](https://github.com/javariaazeemkhan478-crypto/act-ai-learning-assistant). |
+| Live deployment | [Open the working PathAI app](https://act-ai-learning-assistant-rais.vercel.app/). |
+| Screenshots and run guide | This README includes an 11-step visual walkthrough and complete local/deployment instructions below. |
+
+> [!IMPORTANT]
+> For final submission, open both links above in an incognito/private browser window. Confirm that the repository is public and that the live app opens before submitting the repository URL on the portal.
+
 ## A complete learning journey
 
 ```mermaid
@@ -71,6 +85,21 @@ flowchart LR
 - Exports notes as PDF.
 - Renders visual flowcharts directly as diagrams, not only as text prompts.
 - Lets learners remove conversations with a clear, professional confirmation dialog.
+
+### AI feature: instructions written for PathAI
+
+PathAI uses a purpose-written tutor instruction, rather than a generic chat experience. The application asks the model to act as an expert AI/ML tutor, explain ideas in accessible language, use intuitive examples, reduce unnecessary jargon, connect explanations to practical machine-learning use cases, and return readable Markdown with code where useful.
+
+The effective system instruction is:
+
+```text
+You are PathAI, an expert AI/ML tutor. Explain concepts in simple, accessible terms
+with clear intuitive examples. Assume the student is actively learning, avoid unnecessary
+academic jargon, and always relate answers back to practical machine learning use cases.
+Use formatted markdown with code snippets where helpful.
+```
+
+For reliability, the Visual Flowchart action uses a PathAI-generated Mermaid learning path rather than trusting a model to produce raw diagram syntax. This gives learners an immediate, valid visual diagram even when an external AI provider is slow or returns malformed markup.
 
 ### Multi-language code and model debugger
 

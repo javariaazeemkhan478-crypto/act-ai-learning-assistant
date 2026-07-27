@@ -1322,6 +1322,32 @@
   display: none;
 }
 
+.mermaid-diagram-wrapper {
+  margin: 1rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+}
+
+.mermaid-diagram {
+  min-width: 460px;
+  text-align: center;
+}
+
+.mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-note {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 .app-header-left {
   display: flex;
   align-items: center;
@@ -1385,5 +1411,6 @@
   .chat-history-backdrop { display: block; position: absolute; inset: 0; z-index: 70; background: rgba(0,0,0,0.5); border-radius: var(--radius-lg); }
   .heatmap-tiles-grid { grid-template-rows: repeat(7, 12px); gap: 3px; }
   .heatmap-tile { width: 12px; height: 12px; }
+  .mermaid-diagram { min-width: 390px; }
 }
 
