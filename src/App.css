@@ -1358,50 +1358,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
   background: var(--bg-primary);
   color: var(--text-main);
 }
 
-.app-loading-screen::before,
-.app-loading-screen::after {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  width: min(68vw, 720px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  filter: blur(42px);
-  opacity: 0.14;
-  pointer-events: none;
-}
-
-.app-loading-screen::before {
-  top: -26%;
-  left: -16%;
-  background: var(--accent-primary);
-  animation: loadingGlow 7s ease-in-out infinite alternate;
-}
-
-.app-loading-screen::after {
-  right: -18%;
-  bottom: -30%;
-  background: var(--accent-cyan);
-  animation: loadingGlow 7s ease-in-out -3.5s infinite alternate;
-}
-
-.app-loading-card {
+.app-loading-content {
   width: min(92vw, 390px);
-  padding: 2rem;
   text-align: center;
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
-  box-shadow: var(--shadow-card), var(--shadow-glow);
-  backdrop-filter: blur(14px);
-  animation: loadingCardEnter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: loadingContentEnter 260ms ease-out both;
 }
 
 .app-loading-brand,
@@ -1413,7 +1377,7 @@
 .app-loading-brand {
   justify-content: center;
   gap: 0.75rem;
-  margin-bottom: 1.15rem;
+  margin-bottom: 1rem;
 }
 
 .app-loading-icon {
@@ -1421,16 +1385,13 @@
   padding: 0.6rem;
   border-radius: 12px;
   background: linear-gradient(135deg, #6366f1, #10b981);
-  box-shadow: 0 8px 22px rgba(99, 102, 241, 0.25);
-  animation: loadingIconFloat 2.2s ease-in-out infinite;
+  box-shadow: 0 8px 18px rgba(99, 102, 241, 0.2);
 }
 
 .app-loading-title {
   font-size: 1.8rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--text-main), var(--text-muted));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
 }
 
 .app-loading-message {
@@ -1462,14 +1423,9 @@
   animation: loadingProgress 1.35s ease-in-out infinite;
 }
 
-@keyframes loadingCardEnter {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes loadingIconFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+@keyframes loadingContentEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes loadingSpin {
@@ -1481,16 +1437,8 @@
   100% { transform: translateX(260%); }
 }
 
-@keyframes loadingGlow {
-  from { transform: translate3d(0, 0, 0) scale(0.9); }
-  to { transform: translate3d(8%, 6%, 0) scale(1.08); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .app-loading-screen::before,
-  .app-loading-screen::after,
-  .app-loading-card,
-  .app-loading-icon,
+  .app-loading-content,
   .app-loading-spinner,
   .app-loading-progress span {
     animation: none;

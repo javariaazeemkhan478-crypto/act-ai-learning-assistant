@@ -885,7 +885,7 @@ function App() {
   if (!mounted) {
     return (
       <div className="app-loading-screen" role="status" aria-live="polite" aria-label="Loading PathAI">
-        <div className="app-loading-card">
+        <div className="app-loading-content">
           <div className="app-loading-brand">
             <div className="app-loading-icon">
               <Sparkles size={24} color="#fff" />
@@ -893,7 +893,7 @@ function App() {
             <span className="app-loading-title">PathAI</span>
           </div>
           <div className="app-loading-message">
-            <RefreshCw className="app-loading-spinner" size={18} /> Preparing your learning workspace...
+            <RefreshCw className="app-loading-spinner" size={18} /> Loading your learning workspace...
           </div>
           <div className="app-loading-progress" aria-hidden="true"><span /></div>
         </div>
