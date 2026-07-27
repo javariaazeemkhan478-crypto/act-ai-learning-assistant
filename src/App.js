@@ -31,7 +31,8 @@ function MermaidDiagram({ chart }) {
     const render = async () => {
       const renderChart = async (definition) => {
         const { default: mermaid } = await import('mermaid');
-        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'strict' });
+        const appTheme = typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark' ? 'dark' : 'default';
+        mermaid.initialize({ startOnLoad: false, theme: appTheme, securityLevel: 'strict' });
         const isValid = await mermaid.parse(definition, { suppressErrors: true });
         if (!isValid) throw new Error('Invalid Mermaid definition');
         const id = `pathai-flowchart-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -105,7 +106,7 @@ function App() {
   const [token, setToken] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [heatmapPalette, setHeatmapPalette] = useState('emerald');
   const [activityYearOffset, setActivityYearOffset] = useState(0);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -115,7 +116,7 @@ function App() {
     setMounted(true);
     const savedToken = safeGetStorage('pathai_token', '');
     const savedUserStr = safeGetStorage('pathai_user', 'null');
-    const savedTheme = safeGetStorage('pathai_theme', 'dark');
+    const savedTheme = safeGetStorage('pathai_theme', 'light');
     const savedPalette = safeGetStorage('pathai_palette', 'emerald');
 
     setToken(savedToken);
