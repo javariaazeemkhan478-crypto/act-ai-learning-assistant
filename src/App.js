@@ -106,7 +106,7 @@ function App() {
   const [token, setToken] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [theme, setTheme] = useState(() => safeGetStorage('pathai_theme', 'light'));
+  const [theme, setTheme] = useState(() => safeGetStorage('pathai_theme', 'light') === 'dark' ? 'dark' : 'light');
   const [heatmapPalette, setHeatmapPalette] = useState('emerald');
   const [activityYearOffset, setActivityYearOffset] = useState(0);
   const [selectedActivity, setSelectedActivity] = useState(null);
@@ -116,7 +116,7 @@ function App() {
     setMounted(true);
     const savedToken = safeGetStorage('pathai_token', '');
     const savedUserStr = safeGetStorage('pathai_user', 'null');
-    const savedTheme = safeGetStorage('pathai_theme', 'light');
+    const savedTheme = safeGetStorage('pathai_theme', 'light') === 'dark' ? 'dark' : 'light';
     const savedPalette = safeGetStorage('pathai_palette', 'emerald');
 
     setToken(savedToken);
@@ -884,7 +884,7 @@ function App() {
   // Show sleek loader while restoring session on mount (prevents login screen flicker!)
   if (!mounted) {
     return (
-      <div className="app-loading-screen" data-theme={theme}>
+      <div className="app-loading-screen">
         <div className="app-loading-brand">
           <div className="app-loading-icon">
             <Sparkles size={24} color="#fff" />

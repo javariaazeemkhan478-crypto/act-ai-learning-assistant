@@ -597,34 +597,34 @@
 
 /* Palette Color Themes */
 .palette-emerald .level-0 { background-color: var(--bg-secondary); }
-.palette-emerald .level-1 { background-color: #064e3b; border-color: #047857; }
-.palette-emerald .level-2 { background-color: #047857; border-color: #059669; }
-.palette-emerald .level-3 { background-color: #10b981; border-color: #34d399; }
-.palette-emerald .level-4 { background-color: #34d399; border-color: #6ee7b7; box-shadow: 0 0 8px rgba(52, 211, 153, 0.6); }
+.palette-emerald .level-1 { background-color: #d1fae5; border-color: #a7f3d0; }
+.palette-emerald .level-2 { background-color: #6ee7b7; border-color: #34d399; }
+.palette-emerald .level-3 { background-color: #10b981; border-color: #059669; }
+.palette-emerald .level-4 { background-color: #047857; border-color: #065f46; box-shadow: 0 0 8px rgba(4, 120, 87, 0.45); }
 
 .palette-cyan .level-0 { background-color: var(--bg-secondary); }
-.palette-cyan .level-1 { background-color: #0c4a6e; border-color: #0369a1; }
-.palette-cyan .level-2 { background-color: #0284c7; border-color: #06b6d4; }
-.palette-cyan .level-3 { background-color: #06b6d4; border-color: #67e8f9; }
-.palette-cyan .level-4 { background-color: #67e8f9; border-color: #a5f3fc; box-shadow: 0 0 8px rgba(103, 232, 249, 0.6); }
+.palette-cyan .level-1 { background-color: #cffafe; border-color: #a5f3fc; }
+.palette-cyan .level-2 { background-color: #67e8f9; border-color: #22d3ee; }
+.palette-cyan .level-3 { background-color: #06b6d4; border-color: #0891b2; }
+.palette-cyan .level-4 { background-color: #0e7490; border-color: #155e75; box-shadow: 0 0 8px rgba(14, 116, 144, 0.45); }
 
 .palette-indigo .level-0 { background-color: var(--bg-secondary); }
-.palette-indigo .level-1 { background-color: #312e81; border-color: #4338ca; }
-.palette-indigo .level-2 { background-color: #4f46e5; border-color: #6366f1; }
-.palette-indigo .level-3 { background-color: #6366f1; border-color: #818cf8; }
-.palette-indigo .level-4 { background-color: #a5b4fc; border-color: #c7d2fe; box-shadow: 0 0 8px rgba(165, 180, 252, 0.6); }
+.palette-indigo .level-1 { background-color: #e0e7ff; border-color: #c7d2fe; }
+.palette-indigo .level-2 { background-color: #a5b4fc; border-color: #818cf8; }
+.palette-indigo .level-3 { background-color: #6366f1; border-color: #4f46e5; }
+.palette-indigo .level-4 { background-color: #3730a3; border-color: #312e81; box-shadow: 0 0 8px rgba(55, 48, 163, 0.45); }
 
 .palette-amber .level-0 { background-color: var(--bg-secondary); }
-.palette-amber .level-1 { background-color: #78350f; border-color: #b45309; }
-.palette-amber .level-2 { background-color: #d97706; border-color: #f59e0b; }
-.palette-amber .level-3 { background-color: #f59e0b; border-color: #fbbf24; }
-.palette-amber .level-4 { background-color: #fef08a; border-color: #fef9c3; box-shadow: 0 0 8px rgba(254, 240, 138, 0.6); }
+.palette-amber .level-1 { background-color: #fef3c7; border-color: #fde68a; }
+.palette-amber .level-2 { background-color: #fcd34d; border-color: #fbbf24; }
+.palette-amber .level-3 { background-color: #f59e0b; border-color: #d97706; }
+.palette-amber .level-4 { background-color: #b45309; border-color: #92400e; box-shadow: 0 0 8px rgba(180, 83, 9, 0.45); }
 
 .palette-rose .level-0 { background-color: var(--bg-secondary); }
-.palette-rose .level-1 { background-color: #881337; border-color: #be123c; }
-.palette-rose .level-2 { background-color: #e11d48; border-color: #f43f5e; }
-.palette-rose .level-3 { background-color: #f43f5e; border-color: #fb7185; }
-.palette-rose .level-4 { background-color: #fecdd3; border-color: #ffe4e6; box-shadow: 0 0 8px rgba(254, 205, 211, 0.6); }
+.palette-rose .level-1 { background-color: #ffe4e6; border-color: #fecdd3; }
+.palette-rose .level-2 { background-color: #fda4af; border-color: #fb7185; }
+.palette-rose .level-3 { background-color: #f43f5e; border-color: #e11d48; }
+.palette-rose .level-4 { background-color: #be123c; border-color: #9f1239; box-shadow: 0 0 8px rgba(190, 24, 93, 0.45); }
 
 .heatmap-legend {
   display: flex;
@@ -1361,7 +1361,6 @@
   justify-content: center;
   background: var(--bg-primary);
   color: var(--text-main);
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app-loading-brand,

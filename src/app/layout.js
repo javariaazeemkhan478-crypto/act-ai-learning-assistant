@@ -8,6 +8,18 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try {
+              var savedTheme = localStorage.getItem('pathai_theme');
+              document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
+            } catch (error) {
+              document.documentElement.dataset.theme = 'light';
+            }`,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning>
         {children}
       </body>
