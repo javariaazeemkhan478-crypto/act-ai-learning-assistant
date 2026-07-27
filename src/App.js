@@ -907,9 +907,10 @@ function App() {
         <div className="auth-card" style={{ position: 'relative' }}>
           <button 
             type="button"
-            onClick={() => setShowAuthModal(false)} 
-            style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-            aria-label="Close"
+            onClick={() => { setShowAuthModal(false); setAuthError(''); }}
+            className="auth-close-button"
+            aria-label="Close sign in or registration"
+            title="Close"
           >
             <X size={20} />
           </button>
@@ -1132,7 +1133,6 @@ function App() {
             <button type="button" className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
               <Menu size={20} />
             </button>
-            <span className="header-greeting">Welcome, <strong>{currentUser?.first_name || currentUser?.username || 'Guest'}</strong></span>
           </div>
           <div className="app-header-right">
             {!token ? (
@@ -1156,12 +1156,12 @@ function App() {
                 <button className="theme-toggle-btn" onClick={toggleTheme} type="button">
                   {theme === 'dark' ? <><Sun size={16} /> Light</> : <><Moon size={16} /> Dark</>}
                 </button>
-                <div className="header-user-chip">
+                {!isGuest && <div className="header-user-chip">
                   <div className="avatar avatar-sm">
                     {currentUser?.username ? currentUser.username[0].toUpperCase() : 'U'}
                   </div>
-                  <span>{isGuest ? 'Guest learner' : currentUser?.username}</span>
-                </div>
+                  <span>{currentUser?.username}</span>
+                </div>}
                 {isGuest && <>
                   <button className="btn btn-primary btn-sm" onClick={() => openAuth('login')} type="button">Sign In</button>
                   <button className="btn btn-secondary btn-sm" onClick={() => openAuth('register')} type="button">Register</button>

@@ -1242,7 +1242,9 @@
 
 /* Auth Modal / Screen */
 .auth-wrapper {
-  min-height: 100vh;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  height: 100dvh;
   width: 100%;
   display: flex;
   align-items: center;
@@ -1250,6 +1252,7 @@
   background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.12) 0%, transparent 60%),
               var(--bg-primary);
   padding: 1.5rem;
+  overflow-y: auto;
 }
 
 .auth-card {
@@ -1260,6 +1263,34 @@
   border-radius: var(--radius-lg);
   padding: 2.5rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  margin: auto;
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
+}
+
+.auth-close-button {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.auth-close-button:hover {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #fda4af;
+  transform: scale(1.05);
 }
 
 .auth-tabs {
@@ -1402,6 +1433,21 @@
 
   .guest-banner .btn-sm {
     margin-left: 0;
+  }
+
+  .auth-wrapper {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+
+  .auth-card {
+    max-height: none;
+    margin: 0;
+    padding: 1.4rem;
+  }
+
+  .auth-tabs {
+    margin-bottom: 1.25rem;
   }
 
   .chat-layout { height: calc(100vh - 210px); min-height: 520px; position: relative; }
