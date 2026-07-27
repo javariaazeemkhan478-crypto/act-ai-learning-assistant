@@ -884,17 +884,18 @@ function App() {
   // Show sleek loader while restoring session on mount (prevents login screen flicker!)
   if (!mounted) {
     return (
-      <div className="app-loading-screen">
-        <div className="app-loading-brand">
-          <div className="app-loading-icon">
-            <Sparkles size={24} color="#fff" />
+      <div className="app-loading-screen" role="status" aria-live="polite" aria-label="Loading PathAI">
+        <div className="app-loading-card">
+          <div className="app-loading-brand">
+            <div className="app-loading-icon">
+              <Sparkles size={24} color="#fff" />
+            </div>
+            <span className="app-loading-title">PathAI</span>
           </div>
-          <span className="app-loading-title">
-            PathAI
-          </span>
-        </div>
-        <div className="app-loading-message">
-          <RefreshCw className="spin" size={18} color="#10b981" /> Restoring learning session...
+          <div className="app-loading-message">
+            <RefreshCw className="app-loading-spinner" size={18} /> Preparing your learning workspace...
+          </div>
+          <div className="app-loading-progress" aria-hidden="true"><span /></div>
         </div>
       </div>
     );
